@@ -29,7 +29,7 @@ function Detail() {
       <div className="max-w-3xl mx-auto">
         <section className="panel overflow-hidden">
           <header className="panel-header text-lg">
-            <i className={`bx ${ICONS[server.type]} text-2xl`}></i>
+            <i className={`bx ${ICONS[server.type as keyof typeof ICONS]} text-2xl`}></i>
             {server.name}
           </header>
           <div className="p-6 space-y-4">
