@@ -1,24 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SiteLayout } from "@/components/SiteLayout";
+import { ServersPanel } from "@/components/Servers";
+import { AuthCard } from "@/components/AuthCard";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <SiteLayout>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+        <div className="space-y-6">
+          <ServersPanel />
+
+          <section className="panel overflow-hidden">
+            <header className="panel-header-blue">
+              <i className='bx bxs-news text-xl'></i>
+              Vítej na OasiGame!
+            </header>
+            <div className="p-5 text-sm leading-relaxed space-y-2">
+              <p>
+                Vítej na <b className="text-primary">OasiGame</b> — českém herním portálu.
+                Spravujeme <b>CS 1.6 Jailbreak</b>, <b>TeamSpeak</b> a <b>Discord</b> server.
+              </p>
+              <p className="text-muted-foreground">
+                Připoj se ke komunitě, získej VIP a hraj s reálnými hráči — bez botů.
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <aside className="space-y-6">
+          <AuthCard />
+        </aside>
+      </div>
+    </SiteLayout>
   );
 }

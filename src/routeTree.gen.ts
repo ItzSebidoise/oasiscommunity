@@ -9,38 +9,175 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VipRouteImport } from './routes/vip'
+import { Route as ServeryRouteImport } from './routes/servery'
+import { Route as NovinkyRouteImport } from './routes/novinky'
+import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as ForumRouteImport } from './routes/forum'
+import { Route as AdminTymRouteImport } from './routes/admin-tym'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ServerIdRouteImport } from './routes/server.$id'
 
+const VipRoute = VipRouteImport.update({
+  id: '/vip',
+  path: '/vip',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServeryRoute = ServeryRouteImport.update({
+  id: '/servery',
+  path: '/servery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovinkyRoute = NovinkyRouteImport.update({
+  id: '/novinky',
+  path: '/novinky',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KontaktRoute = KontaktRouteImport.update({
+  id: '/kontakt',
+  path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForumRoute = ForumRouteImport.update({
+  id: '/forum',
+  path: '/forum',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTymRoute = AdminTymRouteImport.update({
+  id: '/admin-tym',
+  path: '/admin-tym',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServerIdRoute = ServerIdRouteImport.update({
+  id: '/server/$id',
+  path: '/server/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin-tym': typeof AdminTymRoute
+  '/forum': typeof ForumRoute
+  '/kontakt': typeof KontaktRoute
+  '/novinky': typeof NovinkyRoute
+  '/servery': typeof ServeryRoute
+  '/vip': typeof VipRoute
+  '/server/$id': typeof ServerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin-tym': typeof AdminTymRoute
+  '/forum': typeof ForumRoute
+  '/kontakt': typeof KontaktRoute
+  '/novinky': typeof NovinkyRoute
+  '/servery': typeof ServeryRoute
+  '/vip': typeof VipRoute
+  '/server/$id': typeof ServerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin-tym': typeof AdminTymRoute
+  '/forum': typeof ForumRoute
+  '/kontakt': typeof KontaktRoute
+  '/novinky': typeof NovinkyRoute
+  '/servery': typeof ServeryRoute
+  '/vip': typeof VipRoute
+  '/server/$id': typeof ServerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin-tym'
+    | '/forum'
+    | '/kontakt'
+    | '/novinky'
+    | '/servery'
+    | '/vip'
+    | '/server/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin-tym'
+    | '/forum'
+    | '/kontakt'
+    | '/novinky'
+    | '/servery'
+    | '/vip'
+    | '/server/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin-tym'
+    | '/forum'
+    | '/kontakt'
+    | '/novinky'
+    | '/servery'
+    | '/vip'
+    | '/server/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminTymRoute: typeof AdminTymRoute
+  ForumRoute: typeof ForumRoute
+  KontaktRoute: typeof KontaktRoute
+  NovinkyRoute: typeof NovinkyRoute
+  ServeryRoute: typeof ServeryRoute
+  VipRoute: typeof VipRoute
+  ServerIdRoute: typeof ServerIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vip': {
+      id: '/vip'
+      path: '/vip'
+      fullPath: '/vip'
+      preLoaderRoute: typeof VipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/servery': {
+      id: '/servery'
+      path: '/servery'
+      fullPath: '/servery'
+      preLoaderRoute: typeof ServeryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/novinky': {
+      id: '/novinky'
+      path: '/novinky'
+      fullPath: '/novinky'
+      preLoaderRoute: typeof NovinkyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kontakt': {
+      id: '/kontakt'
+      path: '/kontakt'
+      fullPath: '/kontakt'
+      preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forum': {
+      id: '/forum'
+      path: '/forum'
+      fullPath: '/forum'
+      preLoaderRoute: typeof ForumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-tym': {
+      id: '/admin-tym'
+      path: '/admin-tym'
+      fullPath: '/admin-tym'
+      preLoaderRoute: typeof AdminTymRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +185,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/server/$id': {
+      id: '/server/$id'
+      path: '/server/$id'
+      fullPath: '/server/$id'
+      preLoaderRoute: typeof ServerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminTymRoute: AdminTymRoute,
+  ForumRoute: ForumRoute,
+  KontaktRoute: KontaktRoute,
+  NovinkyRoute: NovinkyRoute,
+  ServeryRoute: ServeryRoute,
+  VipRoute: VipRoute,
+  ServerIdRoute: ServerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
