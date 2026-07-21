@@ -6,7 +6,7 @@ import { ALL_ROLES, LEADERSHIP_ROLES, type AppRole } from "./roles";
 async function assertLeadership(supabase: any, userId: string) {
   const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   const roles = (data ?? []).map((r: any) => r.role as AppRole);
-  if (!roles.some((r) => LEADERSHIP_ROLES.includes(r))) throw new Error("Nemáš oprávnění.");
+  if (!roles.some((r: AppRole) => LEADERSHIP_ROLES.includes(r))) throw new Error("Nemáš oprávnění.");
 }
 
 export const searchUsers = createServerFn({ method: "POST" })
