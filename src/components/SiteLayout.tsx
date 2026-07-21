@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/hooks/useSession";
+import { LEADERSHIP_ROLES, type AppRole } from "@/lib/roles";
 
 const NAV = [
   { to: "/", label: "OasiGame" },
@@ -12,9 +15,11 @@ const NAV = [
 ] as const;
 
 export function SiteLayout({ children }: { children: ReactNode }) {
+  const { session, profile, roles } = useSession();
+  const isLeadership = roles.some((r) => LEADERSHIP_ROLES.includes(r as AppRole));
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Top action bar */}
       <div className="bg-[oklch(0.2_0.02_260)] text-white">
         <div className="max-w-6xl mx-auto px-4 py-2 flex flex-wrap items-center gap-3 justify-between text-sm">
           <div className="flex items-center gap-2 font-display uppercase tracking-wider">
@@ -26,16 +31,29 @@ export function SiteLayout({ children }: { children: ReactNode }) {
             <button className="btn-brand !py-1.5">
               <i className='bx bx-play text-lg'></i> Začít hrát
             </button>
-            <div className="hidden md:flex items-center gap-2 text-white/80">
-              <i className='bx bxs-circle text-[oklch(0.62_0.19_145)] text-[8px] animate-pulse'></i>
-              <span>Právě hraje na CS 1.6: <b className="text-white">14 hráčů</b></span>
-              <span className="text-white/40">— žádní boti, přidej se k nim!</span>
-            </div>
+            {session && profile ? (
+              <div className="flex items-center gap-2 text-white/90">
+                <i className='bx bxs-user-circle text-primary'></i>
+                <span className="font-bold">{profile.nick}</span>
+                {isLeadership && (
+                  <Link to="/admin" className="text-xs bg-primary/80 hover:bg-primary px-2 py-0.5 rounded font-bold uppercase">
+                    Admin panel
+                  </Link>
+                )}
+                <button onClick={() => supabase.auth.signOut()} className="text-white/60 hover:text-white text-xs">
+                  <i className='bx bx-log-out'></i> Odhlásit
+                </button>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center gap-2 text-white/80">
+                <i className='bx bxs-circle text-[oklch(0.62_0.19_145)] text-[8px] animate-pulse'></i>
+                <span>Právě hraje na CS 1.6: <b className="text-white">14 hráčů</b></span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main navbar */}
       <nav className="bg-gradient-to-b from-[var(--brand)] to-[var(--brand-dark)] shadow-lg">
         <div className="max-w-6xl mx-auto px-4">
           <ul className="flex flex-wrap">
