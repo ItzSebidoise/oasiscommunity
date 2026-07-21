@@ -30,7 +30,7 @@ function AdminTym() {
   }
 
   useEffect(() => {
-    seed({ data: undefined }).catch(() => {}).finally(load);
+    (seed as any)().catch(() => {}).finally(load);
   }, []);
 
   const owners = members.filter((m) => m.roles.some((r) => r.endsWith("_owner")));
