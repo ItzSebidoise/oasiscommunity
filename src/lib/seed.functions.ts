@@ -10,21 +10,34 @@ export const ensureSeedAccounts = createServerFn({ method: "POST" }).handler(asy
       email: "seb1k_jk@oasigame.local",
       password: "IamSebidoiseF120",
       role: "cs16_owner" as const,
-      avatar: "https://cdn.lovable.dev/oasi/seb1k.png",
+      avatar: "/__l5e/assets-v1/ec155e24-6bd2-4091-9cab-ae4b6ec432d3/seb1k.png",
     },
     {
       nick: "XxNamiyXx",
       email: "xxnamiyxx@oasigame.local",
       password: "Nigger12345XDXD",
       role: "cs16_leadership" as const,
-      avatar: null,
+      avatar: "/__l5e/assets-v1/21bdef35-4d07-4e70-97d5-98a24338d463/Namiy.png",
+    },
+    {
+      nick: "T3RM1N4T0R.exe",
+      email: "t3rm1n4t0r@oasigame.local",
+      password: crypto.randomUUID() + "!Aa1",
+      role: "cs16_admin" as const,
+      avatar: "/__l5e/assets-v1/72a09cf5-f2ba-45da-872a-07dfd789aaf8/terminator.png",
+    },
+    {
+      nick: "Icyy",
+      email: "icyy@oasigame.local",
+      password: crypto.randomUUID() + "!Aa1",
+      role: "cs16_admin" as const,
+      avatar: "/__l5e/assets-v1/895fdc06-c097-41b0-80c3-fbad7384dcdd/icyy.png",
     },
   ];
 
   const results: Array<{ nick: string; status: string }> = [];
 
   for (const s of SEED) {
-    // Skip if profile with this nick exists
     const { data: existing } = await supabaseAdmin
       .from("profiles").select("id").eq("nick", s.nick).maybeSingle();
     if (existing) { results.push({ nick: s.nick, status: "exists" }); continue; }
