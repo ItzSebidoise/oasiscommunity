@@ -11,7 +11,7 @@ export const updateMyProfile = createServerFn({ method: "POST" })
       description: z.string().max(300).nullable().optional(),
     }).parse(d))
   .handler(async ({ data, context }) => {
-    const patch: Record<string, any> = {};
+    const patch: { avatar_url?: string | null; description?: string | null } = {};
     if (data.avatarUrl !== undefined) patch.avatar_url = data.avatarUrl || null;
     if (data.description !== undefined) {
       const visible = stripTags(data.description ?? "");
