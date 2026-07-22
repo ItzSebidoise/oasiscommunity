@@ -33,15 +33,21 @@ export function SiteLayout({ children }: { children: ReactNode }) {
             </button>
             {session && profile ? (
               <div className="flex items-center gap-2 text-white/90">
-                <i className='bx bxs-user-circle text-primary'></i>
-                <span className="font-bold">{profile.nick}</span>
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} className="w-7 h-7 rounded-full object-cover border border-primary" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
+                    {profile.nick[0]?.toUpperCase()}
+                  </div>
+                )}
+                <span className="font-bold hidden sm:inline">{profile.nick}</span>
                 {isLeadership && (
                   <Link to="/admin" className="text-xs bg-primary/80 hover:bg-primary px-2 py-0.5 rounded font-bold uppercase">
-                    Admin panel
+                    Admin
                   </Link>
                 )}
                 <button onClick={() => supabase.auth.signOut()} className="text-white/60 hover:text-white text-xs">
-                  <i className='bx bx-log-out'></i> Odhlásit
+                  <i className='bx bx-log-out'></i>
                 </button>
               </div>
             ) : (

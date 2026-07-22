@@ -7,7 +7,8 @@ import { useSession } from "@/hooks/useSession";
 import { useServerFn } from "@tanstack/react-start";
 import { createPost, toggleTopicLock } from "@/lib/forum.functions";
 import { ROLE_META, type AppRole } from "@/lib/roles";
-import { FormattedText, AVAILABLE_TAGS } from "@/lib/format-post";
+import { FormattedText } from "@/lib/format-post";
+import { RichEditor } from "@/components/RichEditor";
 
 export const Route = createFileRoute("/forum/$slug/$topicId")({
   component: TopicPage,
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/forum/$slug/$topicId")({
 
 type Topic = { id: string; title: string; body: string; author_id: string; is_locked: boolean; created_at: string; category_id: string };
 type Post = { id: string; body: string; author_id: string; created_at: string };
-type Author = { id: string; nick: string; avatar_url: string | null; roles: AppRole[] };
+type Author = { id: string; nick: string; avatar_url: string | null; description: string | null; roles: AppRole[] };
 
 function TopicPage() {
   const { slug, topicId } = Route.useParams();
@@ -36,9 +37,9 @@ function TopicPage() {
     setTopic(t as Topic | null);
     const { data: ps } = await supabase.from("forum_posts").select("*").eq("topic_id", topicId).order("created_at");
     setPosts((ps ?? []) as Post[]);
-    const ids = Array.from(new Set([t?.author_id, ...(ps ?? []).map((p: any) => p.author_id)].filter(Boolean)));
+    const ids = Array.from(new Set([t?.author_id, ...(ps ?? []).map((p: any) => p.author_id)].filter(Boolean))) as string[];
     if (ids.length) {
-      const { data: profs } = await supabase.from("profiles").select("id, nick, avatar_url").in("id", ids);
+      const { data: profs } = await supabase.from("profiles").select("id, nick, avatar_url, description").in("id", ids);
       const { data: rs } = await supabase.from("user_roles").select("user_id, role").in("user_id", ids);
       const map: Record<string, Author> = {};
       (profs ?? []).forEach((p: any) => {
@@ -89,17 +90,7 @@ function TopicPage() {
           {session && !topic.is_locked && (
             <section className="panel p-5 space-y-3">
               <h3 className="font-display font-bold text-primary uppercase">Odpovědět</h3>
-              <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={5}
-                placeholder="Tvá odpověď — {red}text{/red}, {bold}...{/bold}"
-                className="w-full px-3 py-2 border border-border rounded-md bg-white font-mono text-sm" />
-              <details className="text-xs text-muted-foreground">
-                <summary className="cursor-pointer">Formátovací kódy</summary>
-                <div className="pt-2 space-y-1">
-                  <div><b>Barvy:</b> {AVAILABLE_TAGS.colors.join(", ")}</div>
-                  <div><b>Styly:</b> {AVAILABLE_TAGS.styles.join(", ")}</div>
-                </div>
-              </details>
-              {reply && <div className="border border-border rounded-md p-3 bg-muted"><FormattedText text={reply} /></div>}
+              <RichEditor value={reply} onChange={setReply} rows={5} placeholder="Tvá odpověď…" />
               {err && <div className="text-xs text-destructive">{err}</div>}
               <button onClick={sendReply} disabled={busy || !reply} className="btn-brand disabled:opacity-50">
                 <i className='bx bx-send'></i> Odeslat
@@ -121,20 +112,25 @@ function PostBlock({ title, body, author, createdAt, isTopic }:
   return (
     <article className="panel overflow-hidden">
       {isTopic && title && <header className="panel-header"><i className='bx bxs-message'></i> {title}</header>}
-      <div className="p-4 flex gap-4">
-        <div className="w-16 text-center shrink-0">
+      <div className="p-4">
+        <div className="flex items-start gap-3 pb-3 border-b border-border">
           {author?.avatar_url
-            ? <img src={author.avatar_url} className="w-16 h-16 rounded-full object-cover" />
-            : <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-bold text-2xl">{author?.nick?.[0] ?? "?"}</div>}
-          <div className="mt-1 text-sm font-bold text-primary">{author?.nick ?? "Neznámý"}</div>
-          <div className="flex flex-col gap-0.5 mt-1">
-            {author?.roles?.map((r) => (
-              <span key={r} className={`text-[9px] font-bold uppercase ${ROLE_META[r]?.className}`}>{ROLE_META[r]?.label}</span>
-            ))}
+            ? <img src={author.avatar_url} className="w-14 h-14 rounded-full object-cover border-2 border-primary shrink-0" />
+            : <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl shrink-0">{author?.nick?.[0] ?? "?"}</div>}
+          <div className="min-w-0 flex-1">
+            <div className="font-bold text-primary">{author?.nick ?? "Neznámý"}</div>
+            {author?.description && (
+              <div className="text-xs mt-0.5"><FormattedText text={author.description} /></div>
+            )}
+            <div className="flex flex-wrap gap-1 mt-1">
+              {author?.roles?.map((r) => (
+                <span key={r} className={`text-[9px] font-bold uppercase ${ROLE_META[r]?.className}`}>{ROLE_META[r]?.label}</span>
+              ))}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">{new Date(createdAt).toLocaleString("cs-CZ")}</div>
           </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs text-muted-foreground mb-2">{new Date(createdAt).toLocaleString("cs-CZ")}</div>
+        <div className="pt-3">
           <FormattedText text={body} />
         </div>
       </div>
