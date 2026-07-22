@@ -1,80 +1,54 @@
-## Co postavím
+Velký rozsah — rozdělím to do bloků. Prosím potvrď nebo uprav priority.
 
-### 1. Backend (Lovable Cloud)
-Zapnu Lovable Cloud (databáze + auth). Bez toho nejde login ani ukládat témata/role.
+## 1. Fórum — otevírání sekcí
+- Zkontroluji `src/routes/forum.$slug.tsx` — pravděpodobně chybí handler/route match nebo RLS na `forum_topics` blokuje SELECT. Dohledám a opravím.
 
-### 2. Auth + účty
-- Email/heslo login + register (napojím stávající `AuthCard`).
-- Nick + avatar URL v tabulce `profiles`.
-- Předvytvořím dva účty pomocí seed migrace:
-  - **Seb1k_Jk** / `IamSebidoiseF120` → role `owner` (Cs1.6 Majitel Jailbreak)
-  - **XxNamiyXx** / `Nigger12345XDXD` → role `leadership` (Cs1.6 Vedení Jailbreak)
-  - (emaily vyrobím jako `nick@oasigame.local`, přihlašuje se nickem přes lookup)
+## 2. Databáze / migrace (jedna migrace)
+- **Nové role:** `portal_owner`, `portal_leadership` v enumu `app_role` + do `LEADERSHIP_ROLES`.
+- **Storage bucket `avatars`** (public) pro upload profilovek (limit 2 MB, jen image/*).
+- **Storage bucket `news`** (public) pro obrázky novinek.
+- **Tabulka `news`**: title, body (rich text s tagy), cover_url, images (text[]), author_id, published_at + RLS (public read, leadership write) + GRANTs.
+- **Tabulka `vip_settings`** (single-row): free_vip_ends_at timestamptz + RLS (public read, portal leadership update).
+- **Profiles**: přidat `description text` (max 32 znaků check trigger nebo validace v aplikaci).
+- **Security fixy:**
+  - `is_staff(_user_id)` přepíšu tak, aby kontroloval konkrétní staff role (`cs16_admin`, `ts3_admin` + všechny leadership/owner). Tím se opraví politika "staff or author updates topic".
+  - `has_role`, `is_staff`, `is_leadership` — REVOKE EXECUTE FROM PUBLIC, GRANT EXECUTE TO authenticated only (jsou volané jen z RLS/serveru, ale linter je vidí přes exposed API). Alternativně přesunu do neexposed schématu — jednodušší je REVOKE FROM anon.
 
-### 3. Role
-Tabulky `user_roles` + enum `app_role`. Role:
-- `cs16_owner` (Cs1.6 Majitel Jailbreak) — červeně
-- `cs16_leadership` (Cs1.6 Vedení Jailbreak) — fialově
-- `cs16_admin` (Cs1.6 Admin Jailbreak) — fialově
-- `ts3_owner` (TS3 Majitel) — červeně
-- `ts3_leadership` (TS3 Vedení) — fialově
-- `ts3_admin` (TS3 Admin) — fialově
+## 3. Admin panel (`/admin`)
+- Přidat sekce **Nová role** (portal_owner/leadership) do selectorů.
+- **Nahrávání profilovky:** file input → upload do bucketu `avatars` (path: `{userId}/{timestamp}.ext`), uloží veřejnou URL do profiles. Client-side check: max 2 MB, obrázek. (Crop necháme na později — teď jen resize preview.)
+- **Vytvořit novinku:** formulář title + rich body + upload 1–N obrázků (první = cover). Rich-text toolbar (viz níže).
+- **Free VIP nastavení** (jen `portal_owner`/`portal_leadership`): date-time picker → uloží do `vip_settings`. Default `2026-08-30`.
 
-`has_role()` security-definer funkce. Uživatel může mít víc rolí najednou (jak jsi psal – Terminator může mít CS1.6 Admin + TS3 Admin).
+## 4. Rich-text toolbar
+- Nový komponent `RichTextArea.tsx` — textarea + toolbar (Bold, Italic, Underline, Strike, barvy). Při kliknutí obalí označený text tagy `{bold}...{/bold}` atd. Reuse v: novinky (admin), fórum posty (topic reply + nové téma), user description.
+- Přidám tag `{strike}` do `format-post.tsx`.
 
-### 4. Admin-Tým stránka
-Načte lidi z DB co mají nějakou roli. Zobrazí avatar + všechny jejich role s barvičkami. Předem naseeduju:
-- Seb1k (seb1k.png) — Cs1.6 Majitel
-- Namiy (Namiy.png) — Cs1.6 Vedení
-- T3RM1N4T0R (terminator.png) — Cs1.6 Admin
-- Icyy (icyy.png) — přidám jako Cs1.6 Admin (dej vědět jinak)
-Obrázky nahraju přes lovable-assets.
+## 5. Uživatelský panel
+- Přihlášený uživatel: v `AuthCard` sekci "Můj účet" tlačítko **Upravit profil** → dialog s: upload avatar (do `avatars/{uid}/...`), description (max 32 znaků, rich toolbar). Uloží se do profiles.
+- V navigaci (`SiteLayout`) místo červené ikony hráče: pokud přihlášen a má avatar → `<img>` (24×24 kruh); jinak fallback ikona.
+- Ve fóru u příspěvků: vlevo avatar + nick + description (formátovaný), vpravo tělo. Upravím `forum.$slug.$topicId.tsx`.
 
-### 5. Admin Panel (`/admin`)
-Vidí jen `*_owner` a `*_leadership`. Umí:
-- Vyhledat účet (podle nicku).
-- Vidět aktuální role.
-- **Přidat roli** (dropdown se všemi rolemi).
-- **Odebrat roli**.
-- **Nastavit profilový obrázek** (URL).
+## 6. Novinky
+- `/novinky`: grid karet (cover, title, výřez textu, "Zobrazit více") → route `/novinky/$id` s galerií (slider obrázků), plným tělem.
+- Na homepage nechám současný stav (nebo přidám 3 nejnovější — nechám na později).
 
-### 6. Fórum (`/forum`)
-Hlavní stránka: 3 sekce jako červené panely:
-- **Counter-Strike** — 4 tvoje kategorie
-- **TeamSpeak** — 5 tvoje kategorie
-- **Informace o webu** — read-only sekce se vzory
+## 7. Servery — obrázky + Cs1.6 přejmenování + Discord online
+- Nahraju `discord.png`, `ts3.jpg`, `cs16.png` jako Lovable assety (přes CLI, bez background removal). Použiji v `Servers.tsx` a `server.$id.tsx`.
+- Přejmenuji "Jailbreak" → "Cs1.6 Jailbreak".
+- Discord: přidám do server karty počet členů online. Bez Discord API klíče použiji statický placeholder / fake counter (nebo pokud přidáš webhook/widget ID, přečtu `https://discord.com/api/guilds/{id}/widget.json`). **Pro první iteraci použiji statický údaj** — potvrď, jestli máš guild ID s enabled widgetem.
 
-Klik na kategorii → detail sekce se seznamem témat. U `Informace o webu` nejde tvořit téma (jen vzory).
+## 8. Countdown VIP
+- `vip.tsx` bude číst `vip_settings.free_vip_ends_at` (default 30. 8. 2026 23:59) místo natvrdo napsaného datumu.
 
-Nahoře v sekci tlačítko **Nové téma** (přihlášený uživatel). Pro Vedení/Majitele navíc **Vytvořit vzor** — vzory se v sekci zobrazí nad běžnými tématy v samostatném boxu „Vzory".
+## Technical section
+- Storage upload z klienta: `supabase.storage.from('avatars').upload(...)` s RLS policy `authenticated can INSERT own folder`.
+- Rich-text: čistý tag-obalovač, žádný contenteditable (jednodušší, konzistentní s existujícím parserem).
+- Security definer funkce: `REVOKE EXECUTE ON FUNCTION public.has_role/is_staff/is_leadership FROM PUBLIC, anon;` + `GRANT EXECUTE TO authenticated;`. RLS je používá jako SECURITY DEFINER — pořád funguje protože engine je volá interně.
 
-Detail tématu: příspěvky + odpověď. Admini/Vedení/Majitel: **Locknout / Odemknout** téma. Zamčené = nikdo neodpovídá.
+## Otevřené otázky
+1. **Discord online count** — máš enabled widget na serveru + guild ID? Jinak dám statický "N/A" nebo random placeholder.
+2. **Crop avatarů** — stačí jen limit velikosti (2 MB, doporučené 256×256), nebo chceš skutečný crop UI? (crop = víc práce, doporučuji fázi 2).
+3. **Description limit 32** — jen plain text 32 znaků, nebo 32 znaků včetně formátovacích tagů `{bold}...{/bold}`? (doporučuji 32 zobrazovaných znaků, tagy se nepočítají).
 
-### 7. Formátovací kódy v příspěvcích
-Parser na tyto tagy (case-insensitive):
-- Barvy: `{red}`, `{darkred}`, `{blue}`, `{darkblue}`, `{green}`, `{darkgreen}`, `{yellow}`, `{orange}`, `{purple}`, `{pink}`, `{gray}`, `{black}`, `{white}` — barví text až do `{/}` nebo konce řádku
-- Styl: `{bold}...{/bold}`, `{italic}...{/italic}`, `{underline}...{/underline}`
-
-Seznam vypíšu i v sekci **Informace o webu → Barvy psaní** jako vzor.
-
-### 8. Databázové tabulky
-- `profiles(id, nick, avatar_url)`
-- `user_roles(user_id, role)`
-- `forum_categories(id, section, slug, title, order, allow_topics)` — seed s tvými kategoriemi
-- `forum_topics(id, category_id, author_id, title, body, is_template, is_locked, created_at)`
-- `forum_posts(id, topic_id, author_id, body, created_at)`
-
-RLS: veřejné čtení fóra; psaní jen přihlášený; template/lock/role management jen podle role přes `has_role()`.
-
-### 9. Ostatní
-- Sign-in indikátor v navbaru (jméno + odhlásit).
-- Cache-invalidation přes `onAuthStateChange` v `__root.tsx`.
-
----
-
-**Poznámky:**
-- Login přes nick funguje interně tak, že se pošle `${nick}@oasigame.local` do Supabase. Uživatel vidí jen políčko „Login".
-- Hesla, která jsi poslal v chatu, uložím do seedu. Doporučuju si je po prvním přihlášení změnit.
-- Pokud chceš víc barevných tagů nebo jiné kategorie, řekni před schválením.
-
-Můžu začít?
+Napiš OK / úpravy a jedu na to.

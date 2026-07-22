@@ -2,13 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/SiteLayout";
 import { AuthCard } from "@/components/AuthCard";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/vip")({
-  head: () => ({ meta: [{ title: "VIP — OasiGame" }] }),
+  head: () => ({ meta: [
+    { title: "VIP — OasiGame" },
+    { name: "description", content: "Free VIP akce na OasiGame — připoj se a získej VIP zdarma." },
+    { property: "og:title", content: "VIP — OasiGame" },
+    { property: "og:description", content: "Free VIP akce." },
+  ]}),
   component: Vip,
 });
 
-const END = new Date("2026-08-20T00:00:00").getTime();
+const DEFAULT_END = new Date("2026-08-30T23:59:00+02:00").getTime();
 
 function useCountdown(target: number) {
   const [now, setNow] = useState(() => Date.now());
@@ -17,11 +23,12 @@ function useCountdown(target: number) {
     return () => clearInterval(t);
   }, []);
   const diff = Math.max(0, target - now);
-  const d = Math.floor(diff / 86400000);
-  const h = Math.floor((diff / 3600000) % 24);
-  const m = Math.floor((diff / 60000) % 60);
-  const s = Math.floor((diff / 1000) % 60);
-  return { d, h, m, s };
+  return {
+    d: Math.floor(diff / 86400000),
+    h: Math.floor((diff / 3600000) % 24),
+    m: Math.floor((diff / 60000) % 60),
+    s: Math.floor((diff / 1000) % 60),
+  };
 }
 
 function Cell({ v, label }: { v: number; label: string }) {
@@ -34,7 +41,15 @@ function Cell({ v, label }: { v: number; label: string }) {
 }
 
 function Vip() {
-  const { d, h, m, s } = useCountdown(END);
+  const [endMs, setEndMs] = useState<number>(DEFAULT_END);
+  useEffect(() => {
+    supabase.from("vip_settings").select("free_vip_ends_at").eq("id", 1).maybeSingle()
+      .then(({ data }) => { if (data?.free_vip_ends_at) setEndMs(new Date(data.free_vip_ends_at).getTime()); });
+  }, []);
+  const { d, h, m, s } = useCountdown(endMs);
+  const endDate = new Date(endMs);
+  const fmt = (dt: Date) => `${dt.getDate()}. ${dt.getMonth() + 1}.`;
+
   return (
     <SiteLayout>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
@@ -45,7 +60,7 @@ function Vip() {
               <i className='bx bxs-gift'></i> Probíhá akce: Free VIP
             </div>
             <h2 className="text-2xl font-display font-bold">
-              Free VIP od <span className="text-primary">30. 7.</span> do <span className="text-primary">20. 8.</span>
+              Free VIP do <span className="text-primary">{fmt(endDate)}</span>
             </h2>
             <p className="text-muted-foreground">Zbývá do konce akce:</p>
             <div className="flex justify-center gap-2 flex-wrap">

@@ -9,21 +9,28 @@ const COLORS: Record<string, string> = {
   gray: "#6b7280", black: "#000000", white: "#ffffff",
 };
 
+export const COLOR_MAP = COLORS;
+
 export const AVAILABLE_TAGS = {
   colors: Object.keys(COLORS),
-  styles: ["bold", "italic", "underline"] as const,
+  styles: ["bold", "italic", "underline", "strike"] as const,
 };
 
-type Tag = { kind: "color"; value: string } | { kind: "style"; value: "bold" | "italic" | "underline" };
+type Tag =
+  | { kind: "color"; value: string }
+  | { kind: "style"; value: "bold" | "italic" | "underline" | "strike" };
 
 function styleFor(stack: Tag[]): React.CSSProperties {
   const s: React.CSSProperties = {};
+  const deco: string[] = [];
   for (const t of stack) {
     if (t.kind === "color") s.color = t.value;
     if (t.kind === "style" && t.value === "bold") s.fontWeight = 700;
     if (t.kind === "style" && t.value === "italic") s.fontStyle = "italic";
-    if (t.kind === "style" && t.value === "underline") s.textDecoration = "underline";
+    if (t.kind === "style" && t.value === "underline") deco.push("underline");
+    if (t.kind === "style" && t.value === "strike") deco.push("line-through");
   }
+  if (deco.length) s.textDecoration = deco.join(" ");
   return s;
 }
 
@@ -35,8 +42,7 @@ export function formatPost(text: string): ReactNode {
   let key = 0;
   const push = (chunk: string) => {
     if (!chunk) return;
-    const st = styleFor(stack);
-    out.push(<span key={key++} style={st}>{chunk}</span>);
+    out.push(<span key={key++} style={styleFor(stack)}>{chunk}</span>);
   };
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
@@ -52,10 +58,9 @@ export function formatPost(text: string): ReactNode {
       if (idx !== -1) stack.splice(stack.length - 1 - idx, 1);
     } else if (COLORS[name]) {
       stack.push({ kind: "color", value: COLORS[name] });
-    } else if (name === "bold" || name === "italic" || name === "underline") {
+    } else if (name === "bold" || name === "italic" || name === "underline" || name === "strike") {
       stack.push({ kind: "style", value: name });
     } else {
-      // unknown tag, print literally
       push(m[0]);
     }
   }
@@ -63,6 +68,11 @@ export function formatPost(text: string): ReactNode {
   return <>{out.map((n, i) => <span key={i}>{n}</span>)}</>;
 }
 
-export function FormattedText({ text }: { text: string }) {
-  return <div className="whitespace-pre-wrap break-words">{formatPost(text)}</div>;
+export function FormattedText({ text, className }: { text: string; className?: string }) {
+  return <div className={`whitespace-pre-wrap break-words ${className ?? ""}`}>{formatPost(text)}</div>;
+}
+
+// Count visible characters (ignoring format tags)
+export function stripTags(text: string): string {
+  return text.replace(/\{\/?[a-zA-Z]+\}/g, "");
 }

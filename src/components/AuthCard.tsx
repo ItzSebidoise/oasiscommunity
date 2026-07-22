@@ -4,6 +4,10 @@ import { useSession } from "@/hooks/useSession";
 import { ROLE_META, type AppRole } from "@/lib/roles";
 import { useServerFn } from "@tanstack/react-start";
 import { registerAccount, emailForNick } from "@/lib/auth.functions";
+import { updateMyProfile } from "@/lib/profile.functions";
+import { uploadAvatar } from "@/lib/upload";
+import { RichEditor } from "@/components/RichEditor";
+import { FormattedText } from "@/lib/format-post";
 
 function Field({ label, type = "text", value, onChange, placeholder }: {
   label: string; type?: string; value: string; onChange: (v: string) => void; placeholder?: string;
@@ -21,13 +25,14 @@ function Field({ label, type = "text", value, onChange, placeholder }: {
 }
 
 export function AuthCard() {
-  const { session, profile, roles } = useSession();
+  const { session, profile, roles, refresh } = useSession();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [nick, setNick] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const register = useServerFn(registerAccount);
   const lookup = useServerFn(emailForNick);
@@ -60,10 +65,13 @@ export function AuthCard() {
         <div className="p-5 space-y-3">
           <div className="flex items-center gap-3">
             {profile.avatar_url
-              ? <img src={profile.avatar_url} className="w-12 h-12 rounded-full object-cover border-2 border-primary" />
-              : <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold">{profile.nick[0]}</div>}
-            <div>
-              <div className="font-display font-bold text-primary">{profile.nick}</div>
+              ? <img src={profile.avatar_url} className="w-14 h-14 rounded-full object-cover border-2 border-primary" />
+              : <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-bold">{profile.nick[0]}</div>}
+            <div className="min-w-0">
+              <div className="font-display font-bold text-primary truncate">{profile.nick}</div>
+              {profile.description && (
+                <div className="text-xs mt-0.5"><FormattedText text={profile.description} /></div>
+              )}
               <div className="flex flex-wrap gap-1 mt-1">
                 {roles.length === 0 && <span className="text-xs text-muted-foreground">Hráč</span>}
                 {roles.map((r) => (
@@ -74,9 +82,15 @@ export function AuthCard() {
               </div>
             </div>
           </div>
-          <button onClick={() => supabase.auth.signOut()} className="btn-brand w-full justify-center">
-            <i className='bx bx-log-out'></i> Odhlásit se
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setEditing((v) => !v)} className="btn-brand flex-1 justify-center !py-1.5" style={{background:"linear-gradient(180deg,#6366f1,#3730a3)"}}>
+              <i className='bx bx-edit'></i> {editing ? "Zavřít" : "Upravit profil"}
+            </button>
+            <button onClick={() => supabase.auth.signOut()} className="btn-brand !py-1.5">
+              <i className='bx bx-log-out'></i>
+            </button>
+          </div>
+          {editing && <ProfileEditor onDone={() => { setEditing(false); refresh(); }} />}
         </div>
       </section>
     );
@@ -119,5 +133,50 @@ export function AuthCard() {
         </button>
       </div>
     </section>
+  );
+}
+
+function ProfileEditor({ onDone }: { onDone: () => void }) {
+  const { profile, session } = useSession();
+  const [desc, setDesc] = useState(profile?.description ?? "");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const update = useServerFn(updateMyProfile);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f || !session?.user) return;
+    setBusy(true); setErr(null);
+    try {
+      const url = await uploadAvatar(f, session.user.id);
+      await update({ data: { avatarUrl: url } });
+      onDone();
+    } catch (e: any) { setErr(e.message ?? String(e)); }
+    finally { setBusy(false); }
+  }
+
+  async function saveDesc() {
+    setBusy(true); setErr(null);
+    try { await update({ data: { description: desc } }); onDone(); }
+    catch (e: any) { setErr(e.message ?? String(e)); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <div className="border-t border-border pt-3 space-y-3">
+      <div>
+        <div className="text-xs font-bold text-primary uppercase mb-1">Profilová fotka (max 2 MB)</div>
+        <input type="file" accept="image/*" onChange={handleFile} disabled={busy}
+          className="text-xs w-full file:mr-2 file:btn-brand file:!py-1 file:!px-2 file:!text-xs" />
+      </div>
+      <div>
+        <div className="text-xs font-bold text-primary uppercase mb-1">Popisek (max 32 znaků)</div>
+        <RichEditor value={desc} onChange={setDesc} rows={2} placeholder="Krátký popisek" maxVisibleChars={32} />
+      </div>
+      {err && <div className="text-xs text-destructive">{err}</div>}
+      <button onClick={saveDesc} disabled={busy} className="btn-brand w-full justify-center !py-1.5">
+        <i className='bx bx-save'></i> Uložit popisek
+      </button>
+    </div>
   );
 }

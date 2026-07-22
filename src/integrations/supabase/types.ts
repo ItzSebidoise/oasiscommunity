@@ -114,22 +114,58 @@ export type Database = {
           },
         ]
       }
+      news: {
+        Row: {
+          author_id: string
+          body: string
+          cover_url: string | null
+          created_at: string
+          id: string
+          images: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          images?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          images?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
+          description: string | null
           id: string
           nick: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          description?: string | null
           id: string
           nick: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           nick?: string
         }
@@ -153,6 +189,24 @@ export type Database = {
         }
         Relationships: []
       }
+      vip_settings: {
+        Row: {
+          free_vip_ends_at: string
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          free_vip_ends_at?: string
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          free_vip_ends_at?: string
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -166,6 +220,7 @@ export type Database = {
         Returns: boolean
       }
       is_leadership: { Args: { _user_id: string }; Returns: boolean }
+      is_portal_leadership: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
@@ -176,6 +231,8 @@ export type Database = {
         | "ts3_owner"
         | "ts3_leadership"
         | "ts3_admin"
+        | "portal_owner"
+        | "portal_leadership"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -310,6 +367,8 @@ export const Constants = {
         "ts3_owner",
         "ts3_leadership",
         "ts3_admin",
+        "portal_owner",
+        "portal_leadership",
       ],
     },
   },
