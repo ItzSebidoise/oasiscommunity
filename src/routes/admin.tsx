@@ -29,7 +29,7 @@ function AdminPanel() {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [err, setErr] = useState<string | null>(null);
-  const { session, roles } = useSession();
+  const { session, profile, roles } = useSession();
   const isPortalLeadership = roles.some((r) => (PORTAL_LEADERSHIP_ROLES as string[]).includes(r));
 
   const search = useServerFn(searchUsers);
