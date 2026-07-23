@@ -50,3 +50,16 @@ export async function uploadNewsImage(file: File, authorId: string): Promise<str
   if (error || !data?.signedUrl) throw new Error(error?.message ?? "Nelze získat URL.");
   return data.signedUrl;
 }
+
+export async function uploadServerIcon(file: File, serverId: string): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new Error("Soubor musí být obrázek.");
+  const blob = file.size > MAX_BYTES ? await resizeImage(file) : file;
+  const path = `${serverId}/${Date.now()}.jpg`;
+  const { error: upErr } = await supabase.storage.from("server-icons")
+    .upload(path, blob, { contentType: blob.type || "image/jpeg", upsert: true });
+  if (upErr) throw new Error(upErr.message);
+  const { data, error } = await supabase.storage.from("server-icons")
+    .createSignedUrl(path, 60 * 60 * 24 * 365 * 100);
+  if (error || !data?.signedUrl) throw new Error(error?.message ?? "Nelze získat URL.");
+  return data.signedUrl;
+}

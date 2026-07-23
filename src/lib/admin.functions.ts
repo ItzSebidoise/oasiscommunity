@@ -62,3 +62,16 @@ export const setUserAvatar = createServerFn({ method: "POST" })
     await supabaseAdmin.from("profiles").update({ avatar_url: data.avatarUrl || null }).eq("id", data.userId);
     return { ok: true };
   });
+
+export const deleteUserAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { userId: string }) =>
+    z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertLeadership(context.supabase, context.userId);
+    if (data.userId === context.userId) throw new Error("Nemůžeš smazat sám sebe.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
