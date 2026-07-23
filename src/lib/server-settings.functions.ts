@@ -28,7 +28,7 @@ export const updateServerSetting = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     await assertPortalLeadership(context.supabase, context.userId);
-    const patch: Record<string, unknown> = {};
+    const patch: Record<string, any> = {};
     if (data.address !== undefined) patch.address = data.address;
     if (data.iconUrl !== undefined) patch.icon_url = data.iconUrl;
     if (data.online !== undefined) patch.online = data.online;
@@ -36,7 +36,7 @@ export const updateServerSetting = createServerFn({ method: "POST" })
     if (data.maxPlayers !== undefined) patch.max_players = data.maxPlayers;
     if (data.map !== undefined) patch.map = data.map;
     if (data.name !== undefined) patch.name = data.name;
-    const { error } = await context.supabase.from("server_settings").update(patch).eq("id", data.id);
+    const { error } = await (context.supabase.from("server_settings") as any).update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
