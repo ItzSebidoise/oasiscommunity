@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import discordAsset from "@/assets/discord.png.asset.json";
 import cs16Asset from "@/assets/cs16.png.asset.json";
 import ts3Asset from "@/assets/ts3.jpg.asset.json";
@@ -16,10 +17,10 @@ export interface ServerInfo {
   map?: string;
   online: boolean;
   ipColor?: "red" | "blue";
-  link?: string;
+  icon_url?: string | null;
 }
 
-const IMAGES: Record<ServerType, string> = {
+const FALLBACK_IMAGES: Record<ServerType, string> = {
   ts: ts3Asset.url,
   cs: cs16Asset.url,
   discord: discordAsset.url,
@@ -31,11 +32,15 @@ const IMG_BG: Record<ServerType, string> = {
   discord: "bg-transparent",
 };
 
+function iconFor(s: ServerInfo) {
+  return s.icon_url || FALLBACK_IMAGES[s.type];
+}
+
 export function ServerRow({ server }: { server: ServerInfo }) {
   return (
     <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b last:border-b-0 border-border hover:bg-muted/50 transition-colors">
       <div className={`w-10 h-10 rounded-md overflow-hidden flex items-center justify-center shrink-0 ${IMG_BG[server.type]}`}>
-        <img src={IMAGES[server.type]} alt={server.name} className="w-full h-full object-contain p-1" />
+        <img src={iconFor(server)} alt={server.name} className="w-full h-full object-contain p-1" />
       </div>
       <div className="flex-1 min-w-[160px]">
         <div className="font-display font-bold uppercase text-sm">{server.name}</div>
@@ -74,61 +79,35 @@ export function ServerRow({ server }: { server: ServerInfo }) {
   );
 }
 
-// Pseudo-random but stable-ish "online" count for Discord (until a real widget is wired up)
-function useDiscordOnline() {
-  const [n, setN] = useState(42);
-  useEffect(() => {
-    const tick = () => setN(30 + Math.floor(Math.random() * 40));
-    tick();
-    const t = setInterval(tick, 60_000);
-    return () => clearInterval(t);
-  }, []);
-  return n;
-}
+type DbRow = {
+  id: string; type: ServerType; name: string; address: string; icon_url: string | null;
+  players: number; max_players: number | null; map: string | null; online: boolean; sort_order: number;
+};
 
-export const BASE_SERVERS: ServerInfo[] = [
-  {
-    id: "ts",
-    type: "ts",
-    name: "TeamSpeak Server",
-    ip: "ts.oasigame.cz",
-    players: "8",
-    maxPlayers: "64",
-    online: true,
-    ipColor: "blue",
-  },
-  {
-    id: "jailbreak",
-    type: "cs",
-    name: "Cs1.6 Jailbreak",
-    ip: "89.163.144.10:27015",
-    players: "14",
-    maxPlayers: "32",
-    map: "jail_oasis",
-    online: true,
-    ipColor: "red",
-  },
-  {
-    id: "discord",
-    type: "discord",
-    name: "Discord Server",
-    ip: "dsc.gg/oasiscom",
-    online: true,
-    maxPlayers: undefined,
-  },
-];
+function mapRow(r: DbRow): ServerInfo {
+  return {
+    id: r.id,
+    type: r.type,
+    name: r.name,
+    ip: r.address,
+    players: String(r.players),
+    maxPlayers: r.max_players != null ? String(r.max_players) : undefined,
+    map: r.map ?? undefined,
+    online: r.online,
+    ipColor: r.type === "cs" ? "red" : r.type === "ts" ? "blue" : undefined,
+    icon_url: r.icon_url,
+  };
+}
 
 export function useServers(): ServerInfo[] {
-  const discordOnline = useDiscordOnline();
-  return BASE_SERVERS.map((s) =>
-    s.type === "discord" ? { ...s, players: String(discordOnline) } : s
-  );
+  const [servers, setServers] = useState<ServerInfo[]>([]);
+  useEffect(() => {
+    supabase.from("server_settings").select("*").order("sort_order").then(({ data }) => {
+      setServers(((data ?? []) as DbRow[]).map(mapRow));
+    });
+  }, []);
+  return servers;
 }
-
-// Legacy static export for routes that need it in loaders
-export const SERVERS = BASE_SERVERS.map((s) =>
-  s.type === "discord" ? { ...s, players: "42" } : s
-);
 
 export function ServersPanel({ title = "Naše herní servery!" }: { title?: string }) {
   const servers = useServers();
@@ -139,6 +118,7 @@ export function ServersPanel({ title = "Naše herní servery!" }: { title?: stri
         {title}
       </header>
       <div className="bg-white">
+        {servers.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">Načítám servery…</div>}
         {servers.map((s) => <ServerRow key={s.id} server={s} />)}
       </div>
     </section>

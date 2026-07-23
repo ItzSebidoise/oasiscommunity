@@ -11,12 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VipRouteImport } from './routes/vip'
 import { Route as ServeryRouteImport } from './routes/servery'
-import { Route as NovinkyRouteImport } from './routes/novinky'
 import { Route as KontaktRouteImport } from './routes/kontakt'
-import { Route as ForumRouteImport } from './routes/forum'
 import { Route as AdminTymRouteImport } from './routes/admin-tym'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NovinkyIndexRouteImport } from './routes/novinky.index'
+import { Route as ForumIndexRouteImport } from './routes/forum.index'
 import { Route as ServerIdRouteImport } from './routes/server.$id'
 import { Route as NovinkyIdRouteImport } from './routes/novinky.$id'
 import { Route as ForumSlugRouteImport } from './routes/forum.$slug'
@@ -32,19 +32,9 @@ const ServeryRoute = ServeryRouteImport.update({
   path: '/servery',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NovinkyRoute = NovinkyRouteImport.update({
-  id: '/novinky',
-  path: '/novinky',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const KontaktRoute = KontaktRouteImport.update({
   id: '/kontakt',
   path: '/kontakt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForumRoute = ForumRouteImport.update({
-  id: '/forum',
-  path: '/forum',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTymRoute = AdminTymRouteImport.update({
@@ -62,20 +52,30 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NovinkyIndexRoute = NovinkyIndexRouteImport.update({
+  id: '/novinky/',
+  path: '/novinky/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForumIndexRoute = ForumIndexRouteImport.update({
+  id: '/forum/',
+  path: '/forum/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServerIdRoute = ServerIdRouteImport.update({
   id: '/server/$id',
   path: '/server/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NovinkyIdRoute = NovinkyIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => NovinkyRoute,
+  id: '/novinky/$id',
+  path: '/novinky/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ForumSlugRoute = ForumSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => ForumRoute,
+  id: '/forum/$slug',
+  path: '/forum/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ForumSlugTopicIdRoute = ForumSlugTopicIdRouteImport.update({
   id: '/$topicId',
@@ -87,28 +87,28 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/admin-tym': typeof AdminTymRoute
-  '/forum': typeof ForumRouteWithChildren
   '/kontakt': typeof KontaktRoute
-  '/novinky': typeof NovinkyRouteWithChildren
   '/servery': typeof ServeryRoute
   '/vip': typeof VipRoute
   '/forum/$slug': typeof ForumSlugRouteWithChildren
   '/novinky/$id': typeof NovinkyIdRoute
   '/server/$id': typeof ServerIdRoute
+  '/forum/': typeof ForumIndexRoute
+  '/novinky/': typeof NovinkyIndexRoute
   '/forum/$slug/$topicId': typeof ForumSlugTopicIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/admin-tym': typeof AdminTymRoute
-  '/forum': typeof ForumRouteWithChildren
   '/kontakt': typeof KontaktRoute
-  '/novinky': typeof NovinkyRouteWithChildren
   '/servery': typeof ServeryRoute
   '/vip': typeof VipRoute
   '/forum/$slug': typeof ForumSlugRouteWithChildren
   '/novinky/$id': typeof NovinkyIdRoute
   '/server/$id': typeof ServerIdRoute
+  '/forum': typeof ForumIndexRoute
+  '/novinky': typeof NovinkyIndexRoute
   '/forum/$slug/$topicId': typeof ForumSlugTopicIdRoute
 }
 export interface FileRoutesById {
@@ -116,14 +116,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/admin-tym': typeof AdminTymRoute
-  '/forum': typeof ForumRouteWithChildren
   '/kontakt': typeof KontaktRoute
-  '/novinky': typeof NovinkyRouteWithChildren
   '/servery': typeof ServeryRoute
   '/vip': typeof VipRoute
   '/forum/$slug': typeof ForumSlugRouteWithChildren
   '/novinky/$id': typeof NovinkyIdRoute
   '/server/$id': typeof ServerIdRoute
+  '/forum/': typeof ForumIndexRoute
+  '/novinky/': typeof NovinkyIndexRoute
   '/forum/$slug/$topicId': typeof ForumSlugTopicIdRoute
 }
 export interface FileRouteTypes {
@@ -132,42 +132,42 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/admin-tym'
-    | '/forum'
     | '/kontakt'
-    | '/novinky'
     | '/servery'
     | '/vip'
     | '/forum/$slug'
     | '/novinky/$id'
     | '/server/$id'
+    | '/forum/'
+    | '/novinky/'
     | '/forum/$slug/$topicId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/admin-tym'
-    | '/forum'
     | '/kontakt'
-    | '/novinky'
     | '/servery'
     | '/vip'
     | '/forum/$slug'
     | '/novinky/$id'
     | '/server/$id'
+    | '/forum'
+    | '/novinky'
     | '/forum/$slug/$topicId'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/admin-tym'
-    | '/forum'
     | '/kontakt'
-    | '/novinky'
     | '/servery'
     | '/vip'
     | '/forum/$slug'
     | '/novinky/$id'
     | '/server/$id'
+    | '/forum/'
+    | '/novinky/'
     | '/forum/$slug/$topicId'
   fileRoutesById: FileRoutesById
 }
@@ -175,12 +175,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AdminTymRoute: typeof AdminTymRoute
-  ForumRoute: typeof ForumRouteWithChildren
   KontaktRoute: typeof KontaktRoute
-  NovinkyRoute: typeof NovinkyRouteWithChildren
   ServeryRoute: typeof ServeryRoute
   VipRoute: typeof VipRoute
+  ForumSlugRoute: typeof ForumSlugRouteWithChildren
+  NovinkyIdRoute: typeof NovinkyIdRoute
   ServerIdRoute: typeof ServerIdRoute
+  ForumIndexRoute: typeof ForumIndexRoute
+  NovinkyIndexRoute: typeof NovinkyIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -199,25 +201,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServeryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/novinky': {
-      id: '/novinky'
-      path: '/novinky'
-      fullPath: '/novinky'
-      preLoaderRoute: typeof NovinkyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/kontakt': {
       id: '/kontakt'
       path: '/kontakt'
       fullPath: '/kontakt'
       preLoaderRoute: typeof KontaktRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forum': {
-      id: '/forum'
-      path: '/forum'
-      fullPath: '/forum'
-      preLoaderRoute: typeof ForumRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-tym': {
@@ -241,6 +229,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/novinky/': {
+      id: '/novinky/'
+      path: '/novinky'
+      fullPath: '/novinky/'
+      preLoaderRoute: typeof NovinkyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forum/': {
+      id: '/forum/'
+      path: '/forum'
+      fullPath: '/forum/'
+      preLoaderRoute: typeof ForumIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/server/$id': {
       id: '/server/$id'
       path: '/server/$id'
@@ -250,17 +252,17 @@ declare module '@tanstack/react-router' {
     }
     '/novinky/$id': {
       id: '/novinky/$id'
-      path: '/$id'
+      path: '/novinky/$id'
       fullPath: '/novinky/$id'
       preLoaderRoute: typeof NovinkyIdRouteImport
-      parentRoute: typeof NovinkyRoute
+      parentRoute: typeof rootRouteImport
     }
     '/forum/$slug': {
       id: '/forum/$slug'
-      path: '/$slug'
+      path: '/forum/$slug'
       fullPath: '/forum/$slug'
       preLoaderRoute: typeof ForumSlugRouteImport
-      parentRoute: typeof ForumRoute
+      parentRoute: typeof rootRouteImport
     }
     '/forum/$slug/$topicId': {
       id: '/forum/$slug/$topicId'
@@ -284,37 +286,18 @@ const ForumSlugRouteWithChildren = ForumSlugRoute._addFileChildren(
   ForumSlugRouteChildren,
 )
 
-interface ForumRouteChildren {
-  ForumSlugRoute: typeof ForumSlugRouteWithChildren
-}
-
-const ForumRouteChildren: ForumRouteChildren = {
-  ForumSlugRoute: ForumSlugRouteWithChildren,
-}
-
-const ForumRouteWithChildren = ForumRoute._addFileChildren(ForumRouteChildren)
-
-interface NovinkyRouteChildren {
-  NovinkyIdRoute: typeof NovinkyIdRoute
-}
-
-const NovinkyRouteChildren: NovinkyRouteChildren = {
-  NovinkyIdRoute: NovinkyIdRoute,
-}
-
-const NovinkyRouteWithChildren =
-  NovinkyRoute._addFileChildren(NovinkyRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AdminTymRoute: AdminTymRoute,
-  ForumRoute: ForumRouteWithChildren,
   KontaktRoute: KontaktRoute,
-  NovinkyRoute: NovinkyRouteWithChildren,
   ServeryRoute: ServeryRoute,
   VipRoute: VipRoute,
+  ForumSlugRoute: ForumSlugRouteWithChildren,
+  NovinkyIdRoute: NovinkyIdRoute,
   ServerIdRoute: ServerIdRoute,
+  ForumIndexRoute: ForumIndexRoute,
+  NovinkyIndexRoute: NovinkyIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

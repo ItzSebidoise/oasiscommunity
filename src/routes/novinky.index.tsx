@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { FormattedText, stripTags } from "@/lib/format-post";
 
-export const Route = createFileRoute("/novinky")({
+export const Route = createFileRoute("/novinky/")({
   head: () => ({ meta: [
     { title: "Novinky — OasiGame" },
     { name: "description", content: "Aktuální novinky z OasiGame — eventy, updaty serverů, VIP akce." },

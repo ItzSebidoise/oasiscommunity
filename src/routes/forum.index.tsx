@@ -4,7 +4,7 @@ import { SiteLayout } from "@/components/SiteLayout";
 import { AuthCard } from "@/components/AuthCard";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/forum")({
+export const Route = createFileRoute("/forum/")({
   head: () => ({ meta: [{ title: "Fórum — OasiGame" }] }),
   component: Forum,
 });

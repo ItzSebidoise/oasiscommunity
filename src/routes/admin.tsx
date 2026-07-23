@@ -2,14 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { useServerFn } from "@tanstack/react-start";
-import { searchUsers, addUserRole, removeUserRole, setUserAvatar } from "@/lib/admin.functions";
+import { searchUsers, addUserRole, removeUserRole, setUserAvatar, deleteUserAccount } from "@/lib/admin.functions";
 import { createNews, deleteNews } from "@/lib/news.functions";
 import { setVipEnd } from "@/lib/vip.functions";
+import { updateServerSetting } from "@/lib/server-settings.functions";
 
 import { ALL_ROLES, ROLE_META, PORTAL_LEADERSHIP_ROLES, type AppRole } from "@/lib/roles";
 import { useSession } from "@/hooks/useSession";
 import { RichEditor } from "@/components/RichEditor";
-import { uploadNewsImage } from "@/lib/upload";
+import { uploadNewsImage, uploadServerIcon } from "@/lib/upload";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin")({
@@ -28,13 +29,15 @@ function AdminPanel() {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [err, setErr] = useState<string | null>(null);
-  const { session, roles } = useSession();
+  const { session, profile, roles } = useSession();
   const isPortalLeadership = roles.some((r) => (PORTAL_LEADERSHIP_ROLES as string[]).includes(r));
 
   const search = useServerFn(searchUsers);
   const add = useServerFn(addUserRole);
   const rem = useServerFn(removeUserRole);
   const setAv = useServerFn(setUserAvatar);
+  const del = useServerFn(deleteUserAccount);
+  
   
 
   async function load(query = q) {
@@ -52,6 +55,8 @@ function AdminPanel() {
       <div className="space-y-6">
         {isPortalLeadership && <NewsCreator />}
         {isPortalLeadership && <VipEditor />}
+        {isPortalLeadership && <ServerSettingsEditor />}
+
 
         <section className="panel overflow-hidden">
           <header className="panel-header"><i className='bx bxs-cog'></i> Admin Panel — správa účtů</header>
@@ -71,8 +76,11 @@ function AdminPanel() {
             onAdd={async (role) => { await add({ data: { userId: r.id, role } }); load(); }}
             onRemove={async (role) => { await rem({ data: { userId: r.id, role } }); load(); }}
             onAvatar={async (url) => { await setAv({ data: { userId: r.id, avatarUrl: url } }); load(); }}
+            onDelete={async () => { if (confirm(`Opravdu smazat účet ${r.nick}? Tato akce je nevratná.`)) { await del({ data: { userId: r.id } }); load(); } }}
           />
         ))}
+        {profile?.nick === "Seb1k_Jk" && <BackupInfo />}
+
         {rows.length === 0 && !err && (
           <div className="panel p-6 text-center text-muted-foreground">Žádné účty.</div>
         )}
@@ -214,11 +222,12 @@ function VipEditor() {
   );
 }
 
-function UserAdminCard({ row, onAdd, onRemove, onAvatar }: {
+function UserAdminCard({ row, onAdd, onRemove, onAvatar, onDelete }: {
   row: Row;
   onAdd: (r: AppRole) => Promise<void>;
   onRemove: (r: AppRole) => Promise<void>;
   onAvatar: (url: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
 }) {
   const [addRole, setAddRole] = useState<AppRole>(ALL_ROLES[0]);
   const [remRole, setRemRole] = useState<AppRole | "">("");
@@ -291,7 +300,126 @@ function UserAdminCard({ row, onAdd, onRemove, onAvatar }: {
           </div>
           {err && <div className="text-xs text-destructive">{err}</div>}
         </div>
+
+        {onDelete && (
+          <div className="border border-destructive/40 rounded-md p-3 flex items-center justify-between gap-3 bg-destructive/5">
+            <div className="text-xs">
+              <div className="font-bold text-destructive uppercase">Smazat účet</div>
+              <div className="text-muted-foreground">Nevratná akce — smaže účet i všechna data.</div>
+            </div>
+            <button onClick={onDelete} className="btn-brand !py-1.5" style={{background:"linear-gradient(180deg,#dc2626,#7f1d1d)"}}>
+              <i className='bx bxs-trash'></i> Smazat účet
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
 }
+
+function ServerSettingsEditor() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const update = useServerFn(updateServerSetting);
+
+  async function load() {
+    const { data } = await supabase.from("server_settings").select("*").order("sort_order");
+    setRows(data ?? []);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function save(id: string, patch: any) {
+    setBusyId(id); setMsg(null);
+    try { await update({ data: { id, ...patch } }); await load(); }
+    catch (e: any) { setMsg(e.message ?? String(e)); }
+    finally { setBusyId(null); }
+  }
+
+  async function onIcon(id: string, file: File | null) {
+    if (!file) return;
+    setBusyId(id); setMsg(null);
+    try {
+      const url = await uploadServerIcon(file, id);
+      await update({ data: { id, iconUrl: url } });
+      await load();
+    } catch (e: any) { setMsg(e.message ?? String(e)); }
+    finally { setBusyId(null); }
+  }
+
+  return (
+    <section className="panel overflow-hidden">
+      <header className="panel-header"><i className='bx bxs-server'></i> Nastavení serverů (IP, ikony, stav)</header>
+      <div className="p-5 bg-white space-y-4">
+        {msg && <div className="text-sm text-destructive">{msg}</div>}
+        {rows.map((r) => (
+          <div key={r.id} className="border border-border rounded-md p-3 space-y-2">
+            <div className="flex items-center gap-3">
+              {r.icon_url ? <img src={r.icon_url} className="w-10 h-10 object-contain rounded" /> : <div className="w-10 h-10 rounded bg-muted flex items-center justify-center text-xs">—</div>}
+              <div className="font-bold uppercase">{r.name} <span className="text-xs text-muted-foreground">({r.type})</span></div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-2">
+              <label className="text-xs">
+                <span className="text-primary font-bold">IP / adresa</span>
+                <input defaultValue={r.address} onBlur={(e) => e.target.value !== r.address && save(r.id, { address: e.target.value })}
+                  className="w-full px-2 py-1.5 border border-border rounded mt-1" />
+              </label>
+              <label className="text-xs">
+                <span className="text-primary font-bold">Mapa (jen CS)</span>
+                <input defaultValue={r.map ?? ""} onBlur={(e) => e.target.value !== (r.map ?? "") && save(r.id, { map: e.target.value || null })}
+                  className="w-full px-2 py-1.5 border border-border rounded mt-1" />
+              </label>
+              <label className="text-xs">
+                <span className="text-primary font-bold">Hráči online</span>
+                <input type="number" defaultValue={r.players} onBlur={(e) => save(r.id, { players: Number(e.target.value) })}
+                  className="w-full px-2 py-1.5 border border-border rounded mt-1" />
+              </label>
+              <label className="text-xs">
+                <span className="text-primary font-bold">Max hráčů</span>
+                <input type="number" defaultValue={r.max_players ?? ""} onBlur={(e) => save(r.id, { maxPlayers: e.target.value === "" ? null : Number(e.target.value) })}
+                  className="w-full px-2 py-1.5 border border-border rounded mt-1" />
+              </label>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-xs flex items-center gap-1">
+                <input type="checkbox" defaultChecked={r.online} onChange={(e) => save(r.id, { online: e.target.checked })} />
+                Online
+              </label>
+              <label className="text-xs">
+                <input type="file" accept="image/*" onChange={(e) => onIcon(r.id, e.target.files?.[0] ?? null)} disabled={busyId === r.id} className="text-xs" />
+              </label>
+              {r.icon_url && (
+                <button onClick={() => save(r.id, { iconUrl: null })} className="text-xs text-destructive hover:underline">Odebrat ikonu</button>
+              )}
+              {busyId === r.id && <span className="text-xs text-muted-foreground">Ukládám…</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BackupInfo() {
+  return (
+    <section className="panel overflow-hidden">
+      <header className="panel-header" style={{background:"linear-gradient(180deg,#0f172a,#020617)"}}>
+        <i className='bx bxs-download'></i> Záloha celého webu (pouze Majitel)
+      </header>
+      <div className="p-5 bg-white text-sm space-y-3">
+        <p>
+          Kompletní zdrojový kód webu (HTML/CSS/JS/TS + konfigurace) se dá vždy stáhnout jako živá záloha přes GitHub — Lovable projekt umí propojit se soukromým GitHub repozitářem, který se automaticky aktualizuje s každou změnou. Odtud si můžeš kdykoliv stáhnout ZIP nebo web nasadit na Cloudflare Pages / Vercel / vlastní hosting při výpadku.
+        </p>
+        <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
+          <li>Nahoře v editoru klikni na <b>GitHub → Connect to GitHub</b> a vyber repozitář.</li>
+          <li>Vše se od té chvíle synchronizuje. Stáhni ZIP: <code>Code → Download ZIP</code>.</li>
+          <li>Data (uživatelé, novinky, fórum) exportuj v <b>Backend → Advanced settings → Export data</b>.</li>
+        </ol>
+        <p className="text-xs text-muted-foreground">
+          Login/DB/auth uvnitř Lovable Cloud se při nasazení jinde napojí přes stejné klíče (SUPABASE_URL + publishable key), takže po deployi na jiné hostingy portál běží dál.
+        </p>
+      </div>
+    </section>
+  );
+}
+
