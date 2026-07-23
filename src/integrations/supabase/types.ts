@@ -171,6 +171,48 @@ export type Database = {
         }
         Relationships: []
       }
+      server_settings: {
+        Row: {
+          address: string
+          icon_url: string | null
+          id: string
+          map: string | null
+          max_players: number | null
+          name: string
+          online: boolean
+          players: number
+          sort_order: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          icon_url?: string | null
+          id: string
+          map?: string | null
+          max_players?: number | null
+          name: string
+          online?: boolean
+          players?: number
+          sort_order?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          icon_url?: string | null
+          id?: string
+          map?: string | null
+          max_players?: number | null
+          name?: string
+          online?: boolean
+          players?: number
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
