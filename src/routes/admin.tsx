@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { searchUsers, addUserRole, removeUserRole, setUserAvatar } from "@/lib/admin.functions";
 import { createNews, deleteNews } from "@/lib/news.functions";
 import { setVipEnd } from "@/lib/vip.functions";
-import { ensureSeedAccounts } from "@/lib/seed.functions";
+
 import { ALL_ROLES, ROLE_META, PORTAL_LEADERSHIP_ROLES, type AppRole } from "@/lib/roles";
 import { useSession } from "@/hooks/useSession";
 import { RichEditor } from "@/components/RichEditor";
