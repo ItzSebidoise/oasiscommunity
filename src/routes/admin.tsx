@@ -36,6 +36,8 @@ function AdminPanel() {
   const add = useServerFn(addUserRole);
   const rem = useServerFn(removeUserRole);
   const setAv = useServerFn(setUserAvatar);
+  const del = useServerFn(deleteUserAccount);
+  
   
 
   async function load(query = q) {
@@ -53,6 +55,8 @@ function AdminPanel() {
       <div className="space-y-6">
         {isPortalLeadership && <NewsCreator />}
         {isPortalLeadership && <VipEditor />}
+        {isPortalLeadership && <ServerSettingsEditor />}
+
 
         <section className="panel overflow-hidden">
           <header className="panel-header"><i className='bx bxs-cog'></i> Admin Panel — správa účtů</header>
@@ -72,8 +76,11 @@ function AdminPanel() {
             onAdd={async (role) => { await add({ data: { userId: r.id, role } }); load(); }}
             onRemove={async (role) => { await rem({ data: { userId: r.id, role } }); load(); }}
             onAvatar={async (url) => { await setAv({ data: { userId: r.id, avatarUrl: url } }); load(); }}
+            onDelete={async () => { if (confirm(`Opravdu smazat účet ${r.nick}? Tato akce je nevratná.`)) { await del({ data: { userId: r.id } }); load(); } }}
           />
         ))}
+        {profile?.nick === "Seb1k_Jk" && <BackupInfo />}
+
         {rows.length === 0 && !err && (
           <div className="panel p-6 text-center text-muted-foreground">Žádné účty.</div>
         )}
