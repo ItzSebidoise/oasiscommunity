@@ -2,10 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { AuthCard } from "@/components/AuthCard";
-import { supabase } from "@/integrations/supabase/client";
 import { ROLE_META, type AppRole } from "@/lib/roles";
 import { useServerFn } from "@tanstack/react-start";
-import { ensureSeedAccounts } from "@/lib/seed.functions";
+import { listStaff } from "@/lib/team.functions";
 
 export const Route = createFileRoute("/admin-tym")({
   head: () => ({ meta: [{ title: "Admin-Tým — OasiGame" }] }),
@@ -16,22 +15,17 @@ type TeamMember = { id: string; nick: string; avatar_url: string | null; roles: 
 
 function AdminTym() {
   const [members, setMembers] = useState<TeamMember[]>([]);
-  const seed = useServerFn(ensureSeedAccounts);
+  const fetchStaff = useServerFn(listStaff);
 
   async function load() {
-    const { data: roles } = await supabase.from("user_roles").select("user_id, role");
-    const ids = Array.from(new Set((roles ?? []).map((r: any) => r.user_id)));
-    if (!ids.length) { setMembers([]); return; }
-    const { data: profs } = await supabase.from("profiles").select("id, nick, avatar_url").in("id", ids);
-    setMembers((profs ?? []).map((p: any) => ({
-      ...p,
-      roles: (roles ?? []).filter((r: any) => r.user_id === p.id).map((r: any) => r.role),
-    })));
+    const data = await fetchStaff();
+    setMembers((data ?? []) as TeamMember[]);
   }
 
   useEffect(() => {
-    (seed as any)().catch(() => {}).finally(load);
+    load();
   }, []);
+
 
   const owners = members.filter((m) => m.roles.some((r) => r.endsWith("_owner")));
   const leadership = members.filter((m) => m.roles.some((r) => r.endsWith("_leadership")) && !owners.includes(m));

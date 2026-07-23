@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { searchUsers, addUserRole, removeUserRole, setUserAvatar } from "@/lib/admin.functions";
 import { createNews, deleteNews } from "@/lib/news.functions";
 import { setVipEnd } from "@/lib/vip.functions";
-import { ensureSeedAccounts } from "@/lib/seed.functions";
+
 import { ALL_ROLES, ROLE_META, PORTAL_LEADERSHIP_ROLES, type AppRole } from "@/lib/roles";
 import { useSession } from "@/hooks/useSession";
 import { RichEditor } from "@/components/RichEditor";
@@ -35,7 +35,7 @@ function AdminPanel() {
   const add = useServerFn(addUserRole);
   const rem = useServerFn(removeUserRole);
   const setAv = useServerFn(setUserAvatar);
-  const seed = useServerFn(ensureSeedAccounts);
+  
 
   async function load(query = q) {
     try { setRows(await search({ data: { q: query } }) as Row[]); setErr(null); }
@@ -60,12 +60,7 @@ function AdminPanel() {
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hledat účet…"
                 className="flex-1 px-3 py-2 border border-border rounded-md" />
               <button onClick={() => load()} className="btn-brand">Hledat</button>
-              {isPortalLeadership && (
-                <button onClick={async () => { await seed({} as any); load(); }} className="btn-brand"
-                  style={{background:"linear-gradient(180deg,#6366f1,#3730a3)"}}>
-                  <i className='bx bx-refresh'></i> Seed
-                </button>
-              )}
+
             </div>
             {err && <div className="text-sm text-destructive">{err}</div>}
           </div>
