@@ -60,12 +60,7 @@ function AdminPanel() {
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hledat účet…"
                 className="flex-1 px-3 py-2 border border-border rounded-md" />
               <button onClick={() => load()} className="btn-brand">Hledat</button>
-              {isPortalLeadership && (
-                <button onClick={async () => { await seed({} as any); load(); }} className="btn-brand"
-                  style={{background:"linear-gradient(180deg,#6366f1,#3730a3)"}}>
-                  <i className='bx bx-refresh'></i> Seed
-                </button>
-              )}
+
             </div>
             {err && <div className="text-sm text-destructive">{err}</div>}
           </div>
