@@ -35,7 +35,7 @@ function AdminPanel() {
   const add = useServerFn(addUserRole);
   const rem = useServerFn(removeUserRole);
   const setAv = useServerFn(setUserAvatar);
-  const seed = useServerFn(ensureSeedAccounts);
+  
 
   async function load(query = q) {
     try { setRows(await search({ data: { q: query } }) as Row[]); setErr(null); }
