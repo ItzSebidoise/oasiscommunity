@@ -222,11 +222,12 @@ function VipEditor() {
   );
 }
 
-function UserAdminCard({ row, onAdd, onRemove, onAvatar }: {
+function UserAdminCard({ row, onAdd, onRemove, onAvatar, onDelete }: {
   row: Row;
   onAdd: (r: AppRole) => Promise<void>;
   onRemove: (r: AppRole) => Promise<void>;
   onAvatar: (url: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
 }) {
   const [addRole, setAddRole] = useState<AppRole>(ALL_ROLES[0]);
   const [remRole, setRemRole] = useState<AppRole | "">("");
