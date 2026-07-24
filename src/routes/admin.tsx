@@ -6,11 +6,12 @@ import { searchUsers, addUserRole, removeUserRole, setUserAvatar, deleteUserAcco
 import { createNews, deleteNews } from "@/lib/news.functions";
 import { setVipEnd } from "@/lib/vip.functions";
 import { updateServerSetting } from "@/lib/server-settings.functions";
+import { upsertCredit, deleteCredit } from "@/lib/credits.functions";
 
 import { ALL_ROLES, ROLE_META, PORTAL_LEADERSHIP_ROLES, type AppRole } from "@/lib/roles";
 import { useSession } from "@/hooks/useSession";
 import { RichEditor } from "@/components/RichEditor";
-import { uploadNewsImage, uploadServerIcon } from "@/lib/upload";
+import { uploadNewsImage, uploadServerIcon, uploadAvatar } from "@/lib/upload";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin")({
@@ -56,6 +57,7 @@ function AdminPanel() {
         {isPortalLeadership && <NewsCreator />}
         {isPortalLeadership && <VipEditor />}
         {isPortalLeadership && <ServerSettingsEditor />}
+        {isPortalLeadership && <CreditsEditor />}
 
 
         <section className="panel overflow-hidden">
@@ -423,3 +425,104 @@ function BackupInfo() {
   );
 }
 
+
+type Credit = { id: string; nick: string; role: string; avatar_url: string | null; sort_order: number };
+
+function CreditsEditor() {
+  const [list, setList] = useState<Credit[]>([]);
+  const [nick, setNick] = useState("");
+  const [role, setRole] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const upsert = useServerFn(upsertCredit);
+  const del = useServerFn(deleteCredit);
+  const { session } = useSession();
+
+  async function load() {
+    const { data } = await supabase.from("credits").select("*").order("sort_order");
+    setList((data ?? []) as Credit[]);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function add() {
+    if (!nick.trim() || !role.trim()) return;
+    setBusy(true); setErr(null);
+    try {
+      await upsert({ data: { nick, role, sortOrder: (list.at(-1)?.sort_order ?? 0) + 1 } });
+      setNick(""); setRole(""); await load();
+    } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
+  }
+
+  async function onAvatar(c: Credit, file: File) {
+    if (!session?.user) return;
+    setBusy(true); setErr(null);
+    try {
+      const url = await uploadAvatar(file, session.user.id);
+      await upsert({ data: { id: c.id, nick: c.nick, role: c.role, avatarUrl: url, sortOrder: c.sort_order } });
+      await load();
+    } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
+  }
+
+  async function saveEdit(c: Credit, patch: Partial<Credit>) {
+    setBusy(true); setErr(null);
+    try {
+      await upsert({ data: { id: c.id, nick: patch.nick ?? c.nick, role: patch.role ?? c.role, avatarUrl: c.avatar_url ?? "", sortOrder: c.sort_order } });
+      await load();
+    } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
+  }
+
+  async function remove(id: string) {
+    if (!confirm("Smazat tento kredit?")) return;
+    setBusy(true); setErr(null);
+    try { await del({ data: { id } }); await load(); }
+    catch (e: any) { setErr(e.message); } finally { setBusy(false); }
+  }
+
+  return (
+    <section className="panel overflow-hidden">
+      <header className="panel-header" style={{background:"linear-gradient(90deg,#a855f7,#6b21a8)"}}>
+        <i className='bx bxs-heart'></i> Kredity — správa
+      </header>
+      <div className="p-5 bg-white space-y-4">
+        {err && <div className="text-sm text-destructive">{err}</div>}
+
+        <div className="space-y-3">
+          {list.map((c) => (
+            <div key={c.id} className="flex items-center gap-3 p-3 border border-border rounded-md">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                {c.avatar_url
+                  ? <img src={c.avatar_url} alt={c.nick} className="w-full h-full object-cover" />
+                  : <i className='bx bxs-user-circle text-3xl text-muted-foreground'></i>}
+              </div>
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input defaultValue={c.nick} onBlur={(e) => e.target.value !== c.nick && saveEdit(c, { nick: e.target.value })}
+                  className="px-2 py-1 border border-border rounded text-sm" />
+                <input defaultValue={c.role} onBlur={(e) => e.target.value !== c.role && saveEdit(c, { role: e.target.value })}
+                  className="px-2 py-1 border border-border rounded text-sm" />
+              </div>
+              <label className="text-xs cursor-pointer text-primary hover:underline">
+                PFP
+                <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && onAvatar(c, e.target.files[0])} />
+              </label>
+              <button onClick={() => remove(c.id)} className="text-destructive text-sm hover:underline">Smazat</button>
+            </div>
+          ))}
+          {list.length === 0 && <div className="text-sm text-muted-foreground">Zatím žádné kredity.</div>}
+        </div>
+
+        <div className="border-t border-border pt-3 space-y-2">
+          <div className="text-sm font-semibold">Přidat člověka</div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input value={nick} onChange={(e) => setNick(e.target.value)} placeholder="Nick"
+              className="flex-1 px-3 py-2 border border-border rounded-md text-sm" />
+            <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Role (např. Testovatel)"
+              className="flex-1 px-3 py-2 border border-border rounded-md text-sm" />
+            <button onClick={add} disabled={busy || !nick || !role} className="btn-brand disabled:opacity-50">
+              <i className='bx bx-plus'></i> Přidat
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

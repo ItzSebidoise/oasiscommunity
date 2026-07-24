@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { AuthCard } from "@/components/AuthCard";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/kontakt")({
   head: () => ({ meta: [{ title: "Kontakt — OasiGame" }] }),
   component: Kontakt,
 });
+
+type Credit = { id: string; nick: string; role: string; avatar_url: string | null };
 
 function Row({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
@@ -20,15 +24,13 @@ function Row({ label, value, href }: { label: string; value: string; href?: stri
   );
 }
 
-const CREDITS: { nick: string; role: string }[] = [
-  { nick: "T3RM1N4T0R.exe", role: "Muzika, Nápady" },
-  { nick: "Icyy", role: "Nápady a testování" },
-  { nick: "XxNamiyXx", role: "Nápady, testování a pomoc s kódem" },
-  { nick: "Seb1k_", role: "Hlavní developer, testovatel atd." },
-  { nick: "Vudce", role: "Testovatel" },
-];
-
 function Kontakt() {
+  const [credits, setCredits] = useState<Credit[]>([]);
+  useEffect(() => {
+    supabase.from("credits").select("id, nick, role, avatar_url").order("sort_order")
+      .then(({ data }) => setCredits((data ?? []) as Credit[]));
+  }, []);
+
   return (
     <SiteLayout>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
@@ -49,15 +51,22 @@ function Kontakt() {
             <div className="p-6 bg-white">
               <p className="text-muted-foreground text-sm mb-4">Speciální děkuji hráčům</p>
               <ul className="space-y-3">
-                {CREDITS.map((c) => (
-                  <li key={c.nick} className="flex items-center justify-between py-2 border-b border-dashed border-border last:border-b-0">
-                    <div className="flex items-center gap-2">
-                      <i className='bx bxs-user-circle text-primary text-xl'></i>
-                      <span className="font-semibold text-primary">{c.nick}</span>
+                {credits.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between py-2 border-b border-dashed border-border last:border-b-0 gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                        {c.avatar_url
+                          ? <img src={c.avatar_url} alt={c.nick} className="w-full h-full object-cover" />
+                          : <i className='bx bxs-user-circle text-2xl text-muted-foreground'></i>}
+                      </div>
+                      <span className="font-semibold text-primary truncate">{c.nick}</span>
                     </div>
-                    <span className="text-sm text-muted-foreground italic">| {c.role} |</span>
+                    <span className="text-sm text-muted-foreground italic text-right">| {c.role} |</span>
                   </li>
                 ))}
+                {credits.length === 0 && (
+                  <li className="text-sm text-muted-foreground">Načítám…</li>
+                )}
               </ul>
               <div className="mt-5 text-sm text-foreground/80 space-y-1">
                 <p>Děkuji všem těmto lidem za pomoc s portálem.</p>

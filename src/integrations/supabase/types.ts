@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      credits: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          nick: string
+          role: string
+          sort_order: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          nick: string
+          role: string
+          sort_order?: number
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          nick?: string
+          role?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       forum_categories: {
         Row: {
           allow_topics: boolean
