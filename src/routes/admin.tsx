@@ -56,6 +56,7 @@ function AdminPanel() {
         {isPortalLeadership && <NewsCreator />}
         {isPortalLeadership && <VipEditor />}
         {isPortalLeadership && <ServerSettingsEditor />}
+        {isPortalLeadership && <CreditsEditor />}
 
 
         <section className="panel overflow-hidden">
