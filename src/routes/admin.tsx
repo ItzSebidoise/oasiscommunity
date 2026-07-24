@@ -6,11 +6,12 @@ import { searchUsers, addUserRole, removeUserRole, setUserAvatar, deleteUserAcco
 import { createNews, deleteNews } from "@/lib/news.functions";
 import { setVipEnd } from "@/lib/vip.functions";
 import { updateServerSetting } from "@/lib/server-settings.functions";
+import { upsertCredit, deleteCredit } from "@/lib/credits.functions";
 
 import { ALL_ROLES, ROLE_META, PORTAL_LEADERSHIP_ROLES, type AppRole } from "@/lib/roles";
 import { useSession } from "@/hooks/useSession";
 import { RichEditor } from "@/components/RichEditor";
-import { uploadNewsImage, uploadServerIcon } from "@/lib/upload";
+import { uploadNewsImage, uploadServerIcon, uploadAvatar } from "@/lib/upload";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin")({
