@@ -19,7 +19,7 @@ import { Route as NovinkyIndexRouteImport } from './routes/novinky.index'
 import { Route as ForumIndexRouteImport } from './routes/forum.index'
 import { Route as ServerIdRouteImport } from './routes/server.$id'
 import { Route as NovinkyIdRouteImport } from './routes/novinky.$id'
-import { Route as ForumSlugRouteImport } from './routes/forum.$slug'
+import { Route as ForumSlugIndexRouteImport } from './routes/forum.$slug.index'
 import { Route as ForumSlugTopicIdRouteImport } from './routes/forum.$slug.$topicId'
 
 const VipRoute = VipRouteImport.update({
@@ -72,15 +72,15 @@ const NovinkyIdRoute = NovinkyIdRouteImport.update({
   path: '/novinky/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ForumSlugRoute = ForumSlugRouteImport.update({
-  id: '/forum/$slug',
-  path: '/forum/$slug',
+const ForumSlugIndexRoute = ForumSlugIndexRouteImport.update({
+  id: '/forum/$slug/',
+  path: '/forum/$slug/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForumSlugTopicIdRoute = ForumSlugTopicIdRouteImport.update({
-  id: '/$topicId',
-  path: '/$topicId',
-  getParentRoute: () => ForumSlugRoute,
+  id: '/forum/$slug/$topicId',
+  path: '/forum/$slug/$topicId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -90,12 +90,12 @@ export interface FileRoutesByFullPath {
   '/kontakt': typeof KontaktRoute
   '/servery': typeof ServeryRoute
   '/vip': typeof VipRoute
-  '/forum/$slug': typeof ForumSlugRouteWithChildren
   '/novinky/$id': typeof NovinkyIdRoute
   '/server/$id': typeof ServerIdRoute
   '/forum/': typeof ForumIndexRoute
   '/novinky/': typeof NovinkyIndexRoute
   '/forum/$slug/$topicId': typeof ForumSlugTopicIdRoute
+  '/forum/$slug/': typeof ForumSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -104,12 +104,12 @@ export interface FileRoutesByTo {
   '/kontakt': typeof KontaktRoute
   '/servery': typeof ServeryRoute
   '/vip': typeof VipRoute
-  '/forum/$slug': typeof ForumSlugRouteWithChildren
   '/novinky/$id': typeof NovinkyIdRoute
   '/server/$id': typeof ServerIdRoute
   '/forum': typeof ForumIndexRoute
   '/novinky': typeof NovinkyIndexRoute
   '/forum/$slug/$topicId': typeof ForumSlugTopicIdRoute
+  '/forum/$slug': typeof ForumSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -119,12 +119,12 @@ export interface FileRoutesById {
   '/kontakt': typeof KontaktRoute
   '/servery': typeof ServeryRoute
   '/vip': typeof VipRoute
-  '/forum/$slug': typeof ForumSlugRouteWithChildren
   '/novinky/$id': typeof NovinkyIdRoute
   '/server/$id': typeof ServerIdRoute
   '/forum/': typeof ForumIndexRoute
   '/novinky/': typeof NovinkyIndexRoute
   '/forum/$slug/$topicId': typeof ForumSlugTopicIdRoute
+  '/forum/$slug/': typeof ForumSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -135,12 +135,12 @@ export interface FileRouteTypes {
     | '/kontakt'
     | '/servery'
     | '/vip'
-    | '/forum/$slug'
     | '/novinky/$id'
     | '/server/$id'
     | '/forum/'
     | '/novinky/'
     | '/forum/$slug/$topicId'
+    | '/forum/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -149,12 +149,12 @@ export interface FileRouteTypes {
     | '/kontakt'
     | '/servery'
     | '/vip'
-    | '/forum/$slug'
     | '/novinky/$id'
     | '/server/$id'
     | '/forum'
     | '/novinky'
     | '/forum/$slug/$topicId'
+    | '/forum/$slug'
   id:
     | '__root__'
     | '/'
@@ -163,12 +163,12 @@ export interface FileRouteTypes {
     | '/kontakt'
     | '/servery'
     | '/vip'
-    | '/forum/$slug'
     | '/novinky/$id'
     | '/server/$id'
     | '/forum/'
     | '/novinky/'
     | '/forum/$slug/$topicId'
+    | '/forum/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -178,11 +178,12 @@ export interface RootRouteChildren {
   KontaktRoute: typeof KontaktRoute
   ServeryRoute: typeof ServeryRoute
   VipRoute: typeof VipRoute
-  ForumSlugRoute: typeof ForumSlugRouteWithChildren
   NovinkyIdRoute: typeof NovinkyIdRoute
   ServerIdRoute: typeof ServerIdRoute
   ForumIndexRoute: typeof ForumIndexRoute
   NovinkyIndexRoute: typeof NovinkyIndexRoute
+  ForumSlugTopicIdRoute: typeof ForumSlugTopicIdRoute
+  ForumSlugIndexRoute: typeof ForumSlugIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -257,34 +258,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NovinkyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/forum/$slug': {
-      id: '/forum/$slug'
+    '/forum/$slug/': {
+      id: '/forum/$slug/'
       path: '/forum/$slug'
-      fullPath: '/forum/$slug'
-      preLoaderRoute: typeof ForumSlugRouteImport
+      fullPath: '/forum/$slug/'
+      preLoaderRoute: typeof ForumSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forum/$slug/$topicId': {
       id: '/forum/$slug/$topicId'
-      path: '/$topicId'
+      path: '/forum/$slug/$topicId'
       fullPath: '/forum/$slug/$topicId'
       preLoaderRoute: typeof ForumSlugTopicIdRouteImport
-      parentRoute: typeof ForumSlugRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface ForumSlugRouteChildren {
-  ForumSlugTopicIdRoute: typeof ForumSlugTopicIdRoute
-}
-
-const ForumSlugRouteChildren: ForumSlugRouteChildren = {
-  ForumSlugTopicIdRoute: ForumSlugTopicIdRoute,
-}
-
-const ForumSlugRouteWithChildren = ForumSlugRoute._addFileChildren(
-  ForumSlugRouteChildren,
-)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -293,22 +282,13 @@ const rootRouteChildren: RootRouteChildren = {
   KontaktRoute: KontaktRoute,
   ServeryRoute: ServeryRoute,
   VipRoute: VipRoute,
-  ForumSlugRoute: ForumSlugRouteWithChildren,
   NovinkyIdRoute: NovinkyIdRoute,
   ServerIdRoute: ServerIdRoute,
   ForumIndexRoute: ForumIndexRoute,
   NovinkyIndexRoute: NovinkyIndexRoute,
+  ForumSlugTopicIdRoute: ForumSlugTopicIdRoute,
+  ForumSlugIndexRoute: ForumSlugIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

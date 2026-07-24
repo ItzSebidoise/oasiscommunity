@@ -9,7 +9,7 @@ import { createTopic } from "@/lib/forum.functions";
 import { LEADERSHIP_ROLES, type AppRole } from "@/lib/roles";
 import { FormattedText, AVAILABLE_TAGS } from "@/lib/format-post";
 
-export const Route = createFileRoute("/forum/$slug")({
+export const Route = createFileRoute("/forum/$slug/")({
   component: SectionPage,
 });
 
