@@ -237,8 +237,12 @@ function UserAdminCard({ row, onAdd, onRemove, onAvatar, onEmail, onDelete }: {
   const [addRole, setAddRole] = useState<AppRole>(ALL_ROLES[0]);
   const [remRole, setRemRole] = useState<AppRole | "">("");
   const [avatar, setAvatar] = useState(row.avatar_url ?? "");
+  const [emailVal, setEmailVal] = useState(row.email && !row.email.endsWith("@oasigame.local") ? row.email : "");
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailMsg, setEmailMsg] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const hasRealEmail = row.email && !row.email.endsWith("@oasigame.local");
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -305,6 +309,30 @@ function UserAdminCard({ row, onAdd, onRemove, onAvatar, onEmail, onDelete }: {
           </div>
           {err && <div className="text-xs text-destructive">{err}</div>}
         </div>
+
+        {onEmail && (
+          <div className="border border-border rounded-md p-3 space-y-2">
+            <div className="font-bold text-sm text-primary">Email účtu</div>
+            <div className="text-xs text-muted-foreground">
+              {hasRealEmail ? <>Aktuálně: <b>{row.email}</b></> : <>Účet nemá skutečný email — nastav ho, aby fungoval reset hesla.</>}
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <input type="email" value={emailVal} onChange={(e) => setEmailVal(e.target.value)}
+                placeholder="uzivatel@example.cz" className="flex-1 min-w-[200px] px-2 py-1.5 border border-border rounded text-sm" />
+              <button disabled={emailBusy || !emailVal || !emailVal.includes("@")}
+                onClick={async () => {
+                  setEmailBusy(true); setEmailMsg(null);
+                  try { await onEmail(emailVal); setEmailMsg("Email uložen."); }
+                  catch (e: any) { setEmailMsg(e.message ?? String(e)); }
+                  finally { setEmailBusy(false); }
+                }}
+                className="btn-brand !py-1.5 disabled:opacity-50">
+                <i className='bx bx-envelope'></i> Uložit email
+              </button>
+            </div>
+            {emailMsg && <div className="text-xs text-primary">{emailMsg}</div>}
+          </div>
+        )}
 
         {onDelete && (
           <div className="border border-destructive/40 rounded-md p-3 flex items-center justify-between gap-3 bg-destructive/5">
