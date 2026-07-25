@@ -2,10 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { useServerFn } from "@tanstack/react-start";
-import { searchUsers, addUserRole, removeUserRole, setUserAvatar, deleteUserAccount } from "@/lib/admin.functions";
+import { searchUsers, addUserRole, removeUserRole, setUserAvatar, deleteUserAccount, setUserEmail } from "@/lib/admin.functions";
 import { createNews, deleteNews } from "@/lib/news.functions";
 import { setVipEnd } from "@/lib/vip.functions";
-import { updateServerSetting } from "@/lib/server-settings.functions";
+import { updateServerSetting, refreshServerFromBattleMetrics } from "@/lib/server-settings.functions";
 import { upsertCredit, deleteCredit } from "@/lib/credits.functions";
 
 import { ALL_ROLES, ROLE_META, PORTAL_LEADERSHIP_ROLES, type AppRole } from "@/lib/roles";
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPanel,
 });
 
-type Row = { id: string; nick: string; avatar_url: string | null; roles: AppRole[] };
+type Row = { id: string; nick: string; avatar_url: string | null; email: string | null; roles: AppRole[] };
 
 function AdminPanel() {
   const [q, setQ] = useState("");
@@ -38,6 +38,7 @@ function AdminPanel() {
   const rem = useServerFn(removeUserRole);
   const setAv = useServerFn(setUserAvatar);
   const del = useServerFn(deleteUserAccount);
+  const setEm = useServerFn(setUserEmail);
   
   
 
@@ -78,6 +79,7 @@ function AdminPanel() {
             onAdd={async (role) => { await add({ data: { userId: r.id, role } }); load(); }}
             onRemove={async (role) => { await rem({ data: { userId: r.id, role } }); load(); }}
             onAvatar={async (url) => { await setAv({ data: { userId: r.id, avatarUrl: url } }); load(); }}
+            onEmail={async (email) => { await setEm({ data: { userId: r.id, email, confirm: true } }); load(); }}
             onDelete={async () => { if (confirm(`Opravdu smazat účet ${r.nick}? Tato akce je nevratná.`)) { await del({ data: { userId: r.id } }); load(); } }}
           />
         ))}
@@ -224,11 +226,12 @@ function VipEditor() {
   );
 }
 
-function UserAdminCard({ row, onAdd, onRemove, onAvatar, onDelete }: {
+function UserAdminCard({ row, onAdd, onRemove, onAvatar, onEmail, onDelete }: {
   row: Row;
   onAdd: (r: AppRole) => Promise<void>;
   onRemove: (r: AppRole) => Promise<void>;
   onAvatar: (url: string) => Promise<void>;
+  onEmail?: (email: string) => Promise<void>;
   onDelete?: () => Promise<void>;
 }) {
   const [addRole, setAddRole] = useState<AppRole>(ALL_ROLES[0]);
