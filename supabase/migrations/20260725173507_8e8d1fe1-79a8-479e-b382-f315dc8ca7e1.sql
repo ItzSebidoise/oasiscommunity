@@ -1,0 +1,1 @@
+ALTER TABLE public.server_settings ADD COLUMN IF NOT EXISTS battlemetrics_id text;
