@@ -2,10 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { useServerFn } from "@tanstack/react-start";
-import { searchUsers, addUserRole, removeUserRole, setUserAvatar, deleteUserAccount } from "@/lib/admin.functions";
+import { searchUsers, addUserRole, removeUserRole, setUserAvatar, deleteUserAccount, setUserEmail } from "@/lib/admin.functions";
 import { createNews, deleteNews } from "@/lib/news.functions";
 import { setVipEnd } from "@/lib/vip.functions";
-import { updateServerSetting } from "@/lib/server-settings.functions";
+import { updateServerSetting, refreshServerFromBattleMetrics } from "@/lib/server-settings.functions";
 import { upsertCredit, deleteCredit } from "@/lib/credits.functions";
 
 import { ALL_ROLES, ROLE_META, PORTAL_LEADERSHIP_ROLES, type AppRole } from "@/lib/roles";
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPanel,
 });
 
-type Row = { id: string; nick: string; avatar_url: string | null; roles: AppRole[] };
+type Row = { id: string; nick: string; avatar_url: string | null; email: string | null; roles: AppRole[] };
 
 function AdminPanel() {
   const [q, setQ] = useState("");
@@ -38,6 +38,7 @@ function AdminPanel() {
   const rem = useServerFn(removeUserRole);
   const setAv = useServerFn(setUserAvatar);
   const del = useServerFn(deleteUserAccount);
+  const setEm = useServerFn(setUserEmail);
   
   
 
@@ -78,6 +79,7 @@ function AdminPanel() {
             onAdd={async (role) => { await add({ data: { userId: r.id, role } }); load(); }}
             onRemove={async (role) => { await rem({ data: { userId: r.id, role } }); load(); }}
             onAvatar={async (url) => { await setAv({ data: { userId: r.id, avatarUrl: url } }); load(); }}
+            onEmail={async (email) => { await setEm({ data: { userId: r.id, email, confirm: true } }); load(); }}
             onDelete={async () => { if (confirm(`Opravdu smazat účet ${r.nick}? Tato akce je nevratná.`)) { await del({ data: { userId: r.id } }); load(); } }}
           />
         ))}
@@ -224,18 +226,23 @@ function VipEditor() {
   );
 }
 
-function UserAdminCard({ row, onAdd, onRemove, onAvatar, onDelete }: {
+function UserAdminCard({ row, onAdd, onRemove, onAvatar, onEmail, onDelete }: {
   row: Row;
   onAdd: (r: AppRole) => Promise<void>;
   onRemove: (r: AppRole) => Promise<void>;
   onAvatar: (url: string) => Promise<void>;
+  onEmail?: (email: string) => Promise<void>;
   onDelete?: () => Promise<void>;
 }) {
   const [addRole, setAddRole] = useState<AppRole>(ALL_ROLES[0]);
   const [remRole, setRemRole] = useState<AppRole | "">("");
   const [avatar, setAvatar] = useState(row.avatar_url ?? "");
+  const [emailVal, setEmailVal] = useState(row.email && !row.email.endsWith("@oasigame.local") ? row.email : "");
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailMsg, setEmailMsg] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const hasRealEmail = row.email && !row.email.endsWith("@oasigame.local");
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -303,6 +310,30 @@ function UserAdminCard({ row, onAdd, onRemove, onAvatar, onDelete }: {
           {err && <div className="text-xs text-destructive">{err}</div>}
         </div>
 
+        {onEmail && (
+          <div className="border border-border rounded-md p-3 space-y-2">
+            <div className="font-bold text-sm text-primary">Email účtu</div>
+            <div className="text-xs text-muted-foreground">
+              {hasRealEmail ? <>Aktuálně: <b>{row.email}</b></> : <>Účet nemá skutečný email — nastav ho, aby fungoval reset hesla.</>}
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <input type="email" value={emailVal} onChange={(e) => setEmailVal(e.target.value)}
+                placeholder="uzivatel@example.cz" className="flex-1 min-w-[200px] px-2 py-1.5 border border-border rounded text-sm" />
+              <button disabled={emailBusy || !emailVal || !emailVal.includes("@")}
+                onClick={async () => {
+                  setEmailBusy(true); setEmailMsg(null);
+                  try { await onEmail(emailVal); setEmailMsg("Email uložen."); }
+                  catch (e: any) { setEmailMsg(e.message ?? String(e)); }
+                  finally { setEmailBusy(false); }
+                }}
+                className="btn-brand !py-1.5 disabled:opacity-50">
+                <i className='bx bx-envelope'></i> Uložit email
+              </button>
+            </div>
+            {emailMsg && <div className="text-xs text-primary">{emailMsg}</div>}
+          </div>
+        )}
+
         {onDelete && (
           <div className="border border-destructive/40 rounded-md p-3 flex items-center justify-between gap-3 bg-destructive/5">
             <div className="text-xs">
@@ -324,6 +355,7 @@ function ServerSettingsEditor() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const update = useServerFn(updateServerSetting);
+  const refresh = useServerFn(refreshServerFromBattleMetrics);
 
   async function load() {
     const { data } = await supabase.from("server_settings").select("*").order("sort_order");
@@ -380,6 +412,24 @@ function ServerSettingsEditor() {
                 <span className="text-primary font-bold">Max hráčů</span>
                 <input type="number" defaultValue={r.max_players ?? ""} onBlur={(e) => save(r.id, { maxPlayers: e.target.value === "" ? null : Number(e.target.value) })}
                   className="w-full px-2 py-1.5 border border-border rounded mt-1" />
+              </label>
+              <label className="text-xs sm:col-span-2">
+                <span className="text-primary font-bold">BattleMetrics ID <span className="text-muted-foreground">(najdeš v URL na battlemetrics.com — jen pro CS 1.6 / TS)</span></span>
+                <div className="flex gap-2 mt-1">
+                  <input defaultValue={r.battlemetrics_id ?? ""} placeholder="např. 12345678"
+                    onBlur={(e) => e.target.value !== (r.battlemetrics_id ?? "") && save(r.id, { battlemetricsId: e.target.value || null })}
+                    className="flex-1 px-2 py-1.5 border border-border rounded" />
+                  <button disabled={!r.battlemetrics_id || busyId === r.id}
+                    onClick={async () => {
+                      setBusyId(r.id); setMsg(null);
+                      try { await refresh({ data: { id: r.id } }); await load(); setMsg(`Aktualizováno: ${r.name}`); }
+                      catch (e: any) { setMsg(e.message ?? String(e)); }
+                      finally { setBusyId(null); }
+                    }}
+                    className="btn-brand !py-1.5 !px-3 disabled:opacity-50">
+                    <i className='bx bx-refresh'></i> Načíst
+                  </button>
+                </div>
               </label>
             </div>
             <div className="flex flex-wrap items-center gap-2">

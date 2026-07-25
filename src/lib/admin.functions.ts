@@ -24,8 +24,15 @@ export const searchUsers = createServerFn({ method: "POST" })
     const { data: roles } = ids.length
       ? await supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", ids)
       : { data: [] as any[] };
+    // Fetch emails for these users so admin can see who needs a real email
+    const emails: Record<string, string> = {};
+    for (const id of ids) {
+      const { data: u } = await supabaseAdmin.auth.admin.getUserById(id);
+      if (u.user?.email) emails[id] = u.user.email;
+    }
     return (profiles ?? []).map((p) => ({
       ...p,
+      email: emails[p.id] ?? null,
       roles: (roles ?? []).filter((r: any) => r.user_id === p.id).map((r: any) => r.role as AppRole),
     }));
   });
@@ -72,6 +79,26 @@ export const deleteUserAccount = createServerFn({ method: "POST" })
     if (data.userId === context.userId) throw new Error("Nemůžeš smazat sám sebe.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Set / change email for a user (used to give existing admin accounts a real address)
+export const setUserEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { userId: string; email: string; confirm?: boolean }) =>
+    z.object({
+      userId: z.string().uuid(),
+      email: z.string().trim().email().max(200),
+      confirm: z.boolean().optional(),
+    }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertLeadership(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      email: data.email,
+      email_confirm: data.confirm ?? true,
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });

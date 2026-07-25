@@ -201,6 +201,7 @@ export type Database = {
       server_settings: {
         Row: {
           address: string
+          battlemetrics_id: string | null
           icon_url: string | null
           id: string
           map: string | null
@@ -214,6 +215,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          battlemetrics_id?: string | null
           icon_url?: string | null
           id: string
           map?: string | null
@@ -227,6 +229,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          battlemetrics_id?: string | null
           icon_url?: string | null
           id?: string
           map?: string | null

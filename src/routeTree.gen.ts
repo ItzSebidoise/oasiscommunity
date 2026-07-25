@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VipRouteImport } from './routes/vip'
 import { Route as ServeryRouteImport } from './routes/servery'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as AdminTymRouteImport } from './routes/admin-tym'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -31,6 +32,11 @@ const VipRoute = VipRouteImport.update({
 const ServeryRoute = ServeryRouteImport.update({
   id: '/servery',
   path: '/servery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KontaktRoute = KontaktRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/admin-tym': typeof AdminTymRoute
   '/kontakt': typeof KontaktRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/servery': typeof ServeryRoute
   '/vip': typeof VipRoute
   '/forum/$slug': typeof ForumSlugRouteWithChildren
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/admin-tym': typeof AdminTymRoute
   '/kontakt': typeof KontaktRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/servery': typeof ServeryRoute
   '/vip': typeof VipRoute
   '/novinky/$id': typeof NovinkyIdRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/admin-tym': typeof AdminTymRoute
   '/kontakt': typeof KontaktRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/servery': typeof ServeryRoute
   '/vip': typeof VipRoute
   '/forum/$slug': typeof ForumSlugRouteWithChildren
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-tym'
     | '/kontakt'
+    | '/reset-password'
     | '/servery'
     | '/vip'
     | '/forum/$slug'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-tym'
     | '/kontakt'
+    | '/reset-password'
     | '/servery'
     | '/vip'
     | '/novinky/$id'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-tym'
     | '/kontakt'
+    | '/reset-password'
     | '/servery'
     | '/vip'
     | '/forum/$slug'
@@ -186,6 +198,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AdminTymRoute: typeof AdminTymRoute
   KontaktRoute: typeof KontaktRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ServeryRoute: typeof ServeryRoute
   VipRoute: typeof VipRoute
   ForumSlugRoute: typeof ForumSlugRouteWithChildren
@@ -209,6 +222,13 @@ declare module '@tanstack/react-router' {
       path: '/servery'
       fullPath: '/servery'
       preLoaderRoute: typeof ServeryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kontakt': {
@@ -310,6 +330,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AdminTymRoute: AdminTymRoute,
   KontaktRoute: KontaktRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ServeryRoute: ServeryRoute,
   VipRoute: VipRoute,
   ForumSlugRoute: ForumSlugRouteWithChildren,
@@ -321,13 +342,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
