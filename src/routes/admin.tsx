@@ -355,6 +355,7 @@ function ServerSettingsEditor() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const update = useServerFn(updateServerSetting);
+  const refresh = useServerFn(refreshServerFromBattleMetrics);
 
   async function load() {
     const { data } = await supabase.from("server_settings").select("*").order("sort_order");
@@ -411,6 +412,24 @@ function ServerSettingsEditor() {
                 <span className="text-primary font-bold">Max hráčů</span>
                 <input type="number" defaultValue={r.max_players ?? ""} onBlur={(e) => save(r.id, { maxPlayers: e.target.value === "" ? null : Number(e.target.value) })}
                   className="w-full px-2 py-1.5 border border-border rounded mt-1" />
+              </label>
+              <label className="text-xs sm:col-span-2">
+                <span className="text-primary font-bold">BattleMetrics ID <span className="text-muted-foreground">(najdeš v URL na battlemetrics.com — jen pro CS 1.6 / TS)</span></span>
+                <div className="flex gap-2 mt-1">
+                  <input defaultValue={r.battlemetrics_id ?? ""} placeholder="např. 12345678"
+                    onBlur={(e) => e.target.value !== (r.battlemetrics_id ?? "") && save(r.id, { battlemetricsId: e.target.value || null })}
+                    className="flex-1 px-2 py-1.5 border border-border rounded" />
+                  <button disabled={!r.battlemetrics_id || busyId === r.id}
+                    onClick={async () => {
+                      setBusyId(r.id); setMsg(null);
+                      try { await refresh({ data: { id: r.id } }); await load(); setMsg(`Aktualizováno: ${r.name}`); }
+                      catch (e: any) { setMsg(e.message ?? String(e)); }
+                      finally { setBusyId(null); }
+                    }}
+                    className="btn-brand !py-1.5 !px-3 disabled:opacity-50">
+                    <i className='bx bx-refresh'></i> Načíst
+                  </button>
+                </div>
               </label>
             </div>
             <div className="flex flex-wrap items-center gap-2">
