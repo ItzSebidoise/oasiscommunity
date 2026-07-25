@@ -55,9 +55,12 @@ export function AuthCard() {
     setBusy(true);
     try {
       await register({ data: { nick, password, email } });
+      // Attempt sign-in — will fail if email confirmation is required
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      setOk("Registrace hotova. Na tvůj email jsme poslali potvrzovací zprávu.");
+      if (error) {
+        setOk("Registrace hotova! Na tvůj email jsme poslali potvrzovací zprávu — potvrď účet a poté se přihlaš.");
+        setMode("login");
+      }
     } catch (e: any) { setErr(e.message ?? String(e)); }
     finally { setBusy(false); }
   }
