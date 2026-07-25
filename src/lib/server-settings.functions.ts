@@ -74,7 +74,7 @@ export const refreshServerFromBattleMetrics = createServerFn({ method: "POST" })
       map: a.details?.map ?? a.map ?? null,
     };
     if (typeof a.maxPlayers === "number") patch.max_players = a.maxPlayers;
-    const { error: uErr } = await supabaseAdmin.from("server_settings").update(patch).eq("id", data.id);
+    const { error: uErr } = await (supabaseAdmin.from("server_settings") as any).update(patch).eq("id", data.id);
     if (uErr) throw new Error(uErr.message);
     return { ok: true, ...patch };
   });
