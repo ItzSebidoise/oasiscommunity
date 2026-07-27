@@ -34,24 +34,20 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # Diagnostika: Vypíše vytvořené složky po buildu
-      - name: Check build folder
+      - name: Find output directory
         run: |
-          echo "=== Soubory v kořeni projektu ==="
-          ls -la
-          echo "=== Hledám složku s buildem ==="
-          if [ -d "dist" ]; then echo "BUILD_PATH=dist" >> $GITHUB_ENV;
-          elif [ -d "build" ]; then echo "BUILD_PATH=build" >> $GITHUB_ENV;
-          elif [ -d "out" ]; then echo "BUILD_PATH=out" >> $GITHUB_ENV;
-          else echo "BUILD_PATH=." >> $GITHUB_ENV; fi
+          if [ -d "dist" ]; then echo "OUT_DIR=dist" >> $GITHUB_ENV;
+          elif [ -d "build" ]; then echo "OUT_DIR=build" >> $GITHUB_ENV;
+          elif [ -d "out" ]; then echo "OUT_DIR=out" >> $GITHUB_ENV;
+          else echo "OUT_DIR=." >> $GITHUB_ENV; fi
 
       - name: Add .nojekyll
-        run: touch ./${{ env.BUILD_PATH }}/.nojekyll
+        run: touch ./${{ env.OUT_DIR }}/.nojekyll
 
       - name: Setup Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './${{ env.BUILD_PATH }}'
+          path: './${{ env.OUT_DIR }}'
 
       - name: Deploy to GitHub Pages
         id: deployment
