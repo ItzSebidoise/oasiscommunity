@@ -34,29 +34,14 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # Vypíše přesnou strukturu po buildu, abychom viděli složku dist/build
-      - name: Debug build output
-        run: |
-          echo "=== Zobrazuji vytvořené složky ==="
-          ls -la
-
-      - name: Fix fallback directory
-        run: |
-          if [ -d "dist" ]; then
-            echo "DEPLOY_DIR=dist" >> $GITHUB_ENV
-          elif [ -d "build" ]; then
-            echo "DEPLOY_DIR=build" >> $GITHUB_ENV
-          else
-            echo "DEPLOY_DIR=." >> $GITHUB_ENV
-          fi
-
       - name: Add .nojekyll
-        run: touch ./${{ env.DEPLOY_DIR }}/.nojekyll
+        run: touch ./.output/public/.nojekyll
 
       - name: Setup Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # Výchozí složka pro Vite
+          # Nitro / TanStack Start generuje statické podklady do .output/public
+          path: './.output/public'
 
       - name: Deploy to GitHub Pages
         id: deployment
