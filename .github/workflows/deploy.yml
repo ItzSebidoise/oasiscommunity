@@ -34,10 +34,15 @@ jobs:
       - name: Build project
         run: npm run build
 
+      # Vytvoří .nojekyll, aby GitHub neignoroval složky s podtržítkem
+      - name: Add .nojekyll
+        run: touch ./dist/.nojekyll || touch ./build/.nojekyll || true
+
       - name: Setup Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          # Vyzkouší dist, a pokud neexistuje, použije build
+          path: ${{ hashFiles('dist/**') != '' && './dist' || './build' }}
 
       - name: Deploy to GitHub Pages
         id: deployment
