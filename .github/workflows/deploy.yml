@@ -34,15 +34,24 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # Vytvoří .nojekyll, aby GitHub neignoroval složky s podtržítkem
+      # Diagnostika: Vypíše vytvořené složky po buildu
+      - name: Check build folder
+        run: |
+          echo "=== Soubory v kořeni projektu ==="
+          ls -la
+          echo "=== Hledám složku s buildem ==="
+          if [ -d "dist" ]; then echo "BUILD_PATH=dist" >> $GITHUB_ENV;
+          elif [ -d "build" ]; then echo "BUILD_PATH=build" >> $GITHUB_ENV;
+          elif [ -d "out" ]; then echo "BUILD_PATH=out" >> $GITHUB_ENV;
+          else echo "BUILD_PATH=." >> $GITHUB_ENV; fi
+
       - name: Add .nojekyll
-        run: touch ./dist/.nojekyll || touch ./build/.nojekyll || true
+        run: touch ./${{ env.BUILD_PATH }}/.nojekyll
 
       - name: Setup Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          # Vyzkouší dist, a pokud neexistuje, použije build
-          path: ${{ hashFiles('dist/**') != '' && './dist' || './build' }}
+          path: './${{ env.BUILD_PATH }}'
 
       - name: Deploy to GitHub Pages
         id: deployment
