@@ -13,6 +13,7 @@ import { useSession } from "@/hooks/useSession";
 import { RichEditor } from "@/components/RichEditor";
 import { uploadNewsImage, uploadServerIcon, uploadAvatar } from "@/lib/upload";
 import { supabase } from "@/integrations/supabase/client";
+import { BackupDownload } from "@/components/BackupDownload";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [
@@ -83,7 +84,7 @@ function AdminPanel() {
             onDelete={async () => { if (confirm(`Opravdu smazat účet ${r.nick}? Tato akce je nevratná.`)) { await del({ data: { userId: r.id } }); load(); } }}
           />
         ))}
-        {profile?.nick === "Seb1k_Jk" && <BackupInfo />}
+        {profile?.nick === "Seb1k_Jk" && <BackupDownload />}
 
         {rows.length === 0 && !err && (
           <div className="panel p-6 text-center text-muted-foreground">Žádné účty.</div>
@@ -451,30 +452,6 @@ function ServerSettingsEditor() {
     </section>
   );
 }
-
-function BackupInfo() {
-  return (
-    <section className="panel overflow-hidden">
-      <header className="panel-header" style={{background:"linear-gradient(180deg,#0f172a,#020617)"}}>
-        <i className='bx bxs-download'></i> Záloha celého webu (pouze Majitel)
-      </header>
-      <div className="p-5 bg-white text-sm space-y-3">
-        <p>
-          Kompletní zdrojový kód webu (HTML/CSS/JS/TS + konfigurace) se dá vždy stáhnout jako živá záloha přes GitHub — Lovable projekt umí propojit se soukromým GitHub repozitářem, který se automaticky aktualizuje s každou změnou. Odtud si můžeš kdykoliv stáhnout ZIP nebo web nasadit na Cloudflare Pages / Vercel / vlastní hosting při výpadku.
-        </p>
-        <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
-          <li>Nahoře v editoru klikni na <b>GitHub → Connect to GitHub</b> a vyber repozitář.</li>
-          <li>Vše se od té chvíle synchronizuje. Stáhni ZIP: <code>Code → Download ZIP</code>.</li>
-          <li>Data (uživatelé, novinky, fórum) exportuj v <b>Backend → Advanced settings → Export data</b>.</li>
-        </ol>
-        <p className="text-xs text-muted-foreground">
-          Login/DB/auth uvnitř Lovable Cloud se při nasazení jinde napojí přes stejné klíče (SUPABASE_URL + publishable key), takže po deployi na jiné hostingy portál běží dál.
-        </p>
-      </div>
-    </section>
-  );
-}
-
 
 type Credit = { id: string; nick: string; role: string; avatar_url: string | null; sort_order: number };
 
