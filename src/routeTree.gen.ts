@@ -9,44 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VipRouteImport } from './routes/vip'
-import { Route as ServeryRouteImport } from './routes/servery'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as KontaktRouteImport } from './routes/kontakt'
-import { Route as AdminTymRouteImport } from './routes/admin-tym'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as NovinkyIndexRouteImport } from './routes/novinky.index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdminTymRouteImport } from './routes/admin-tym'
+import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ServeryRouteImport } from './routes/servery'
+import { Route as VipRouteImport } from './routes/vip'
 import { Route as ForumIndexRouteImport } from './routes/forum.index'
-import { Route as ServerIdRouteImport } from './routes/server.$id'
-import { Route as NovinkyIdRouteImport } from './routes/novinky.$id'
 import { Route as ForumSlugRouteImport } from './routes/forum.$slug'
+import { Route as NovinkyIndexRouteImport } from './routes/novinky.index'
+import { Route as NovinkyIdRouteImport } from './routes/novinky.$id'
+import { Route as ServerIdRouteImport } from './routes/server.$id'
 import { Route as ForumSlugIndexRouteImport } from './routes/forum.$slug.index'
 import { Route as ForumSlugTopicIdRouteImport } from './routes/forum.$slug.$topicId'
 
-const VipRoute = VipRouteImport.update({
-  id: '/vip',
-  path: '/vip',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ServeryRoute = ServeryRouteImport.update({
-  id: '/servery',
-  path: '/servery',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KontaktRoute = KontaktRouteImport.update({
-  id: '/kontakt',
-  path: '/kontakt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminTymRoute = AdminTymRouteImport.update({
-  id: '/admin-tym',
-  path: '/admin-tym',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -54,14 +34,29 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AdminTymRoute = AdminTymRouteImport.update({
+  id: '/admin-tym',
+  path: '/admin-tym',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NovinkyIndexRoute = NovinkyIndexRouteImport.update({
-  id: '/novinky/',
-  path: '/novinky/',
+const KontaktRoute = KontaktRouteImport.update({
+  id: '/kontakt',
+  path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServeryRoute = ServeryRouteImport.update({
+  id: '/servery',
+  path: '/servery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VipRoute = VipRouteImport.update({
+  id: '/vip',
+  path: '/vip',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForumIndexRoute = ForumIndexRouteImport.update({
@@ -69,9 +64,14 @@ const ForumIndexRoute = ForumIndexRouteImport.update({
   path: '/forum/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ServerIdRoute = ServerIdRouteImport.update({
-  id: '/server/$id',
-  path: '/server/$id',
+const ForumSlugRoute = ForumSlugRouteImport.update({
+  id: '/forum/$slug',
+  path: '/forum/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovinkyIndexRoute = NovinkyIndexRouteImport.update({
+  id: '/novinky/',
+  path: '/novinky/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NovinkyIdRoute = NovinkyIdRouteImport.update({
@@ -79,9 +79,9 @@ const NovinkyIdRoute = NovinkyIdRouteImport.update({
   path: '/novinky/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ForumSlugRoute = ForumSlugRouteImport.update({
-  id: '/forum/$slug',
-  path: '/forum/$slug',
+const ServerIdRoute = ServerIdRouteImport.update({
+  id: '/server/$id',
+  path: '/server/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForumSlugIndexRoute = ForumSlugIndexRouteImport.update({
@@ -210,39 +210,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/vip': {
-      id: '/vip'
-      path: '/vip'
-      fullPath: '/vip'
-      preLoaderRoute: typeof VipRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/servery': {
-      id: '/servery'
-      path: '/servery'
-      fullPath: '/servery'
-      preLoaderRoute: typeof ServeryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kontakt': {
-      id: '/kontakt'
-      path: '/kontakt'
-      fullPath: '/kontakt'
-      preLoaderRoute: typeof KontaktRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin-tym': {
-      id: '/admin-tym'
-      path: '/admin-tym'
-      fullPath: '/admin-tym'
-      preLoaderRoute: typeof AdminTymRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -252,18 +224,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/admin-tym': {
+      id: '/admin-tym'
+      path: '/admin-tym'
+      fullPath: '/admin-tym'
+      preLoaderRoute: typeof AdminTymRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/novinky/': {
-      id: '/novinky/'
-      path: '/novinky'
-      fullPath: '/novinky/'
-      preLoaderRoute: typeof NovinkyIndexRouteImport
+    '/kontakt': {
+      id: '/kontakt'
+      path: '/kontakt'
+      fullPath: '/kontakt'
+      preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/servery': {
+      id: '/servery'
+      path: '/servery'
+      fullPath: '/servery'
+      preLoaderRoute: typeof ServeryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vip': {
+      id: '/vip'
+      path: '/vip'
+      fullPath: '/vip'
+      preLoaderRoute: typeof VipRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forum/': {
@@ -273,11 +266,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForumIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/server/$id': {
-      id: '/server/$id'
-      path: '/server/$id'
-      fullPath: '/server/$id'
-      preLoaderRoute: typeof ServerIdRouteImport
+    '/forum/$slug': {
+      id: '/forum/$slug'
+      path: '/forum/$slug'
+      fullPath: '/forum/$slug'
+      preLoaderRoute: typeof ForumSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/novinky/': {
+      id: '/novinky/'
+      path: '/novinky'
+      fullPath: '/novinky/'
+      preLoaderRoute: typeof NovinkyIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/novinky/$id': {
@@ -287,11 +287,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NovinkyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/forum/$slug': {
-      id: '/forum/$slug'
-      path: '/forum/$slug'
-      fullPath: '/forum/$slug'
-      preLoaderRoute: typeof ForumSlugRouteImport
+    '/server/$id': {
+      id: '/server/$id'
+      path: '/server/$id'
+      fullPath: '/server/$id'
+      preLoaderRoute: typeof ServerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forum/$slug/': {
